@@ -55,6 +55,11 @@ export class Panorama {
     return this.autoTour;
   }
 
+  // Direction actuellement au centre de l'écran (là où l'utilisateur vise).
+  get currentLook() {
+    return { lon: this.lon, lat: this.lat };
+  }
+
   _bindControls() {
     const el = this.canvas;
     const down = (x, y) => {

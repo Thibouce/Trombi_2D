@@ -10,19 +10,20 @@
 const FAL_RUN = 'https://fal.run';
 export const DEFAULT_MODEL = 'fal-ai/nano-banana-pro/edit';
 
-const DEFAULT_PROMPT = `Tu édites une image panoramique équirectangulaire 360° (ratio 2:1) d'un lieu de bureau.
-Première image : la scène équirectangulaire (les locaux).
-Deuxième image : la photo d'une personne (visage / tête).
+const DEFAULT_PROMPT = `Cette première image est un panorama ÉQUIRECTANGULAIRE 360° (ratio 2:1) montrant des personnes dans des locaux.
+Un CERCLE ROUGE y marque la tête de l'une des personnes déjà présentes.
+La deuxième image fournit une nouvelle tête / un nouveau visage.
 
-Objectif : intègre cette personne dans la scène de façon réaliste, comme si elle
-se tenait naturellement debout dans ces locaux. Respecte impérativement :
-- la projection ÉQUIRECTANGULAIRE 360° et le ratio 2:1 de l'image de sortie ;
-- l'échelle humaine (taille réaliste, pieds au niveau du sol) ;
-- la perspective, l'éclairage, la balance des couleurs et les ombres portées de la scène ;
-- le reste de la scène doit rester INCHANGÉ (n'ajoute rien d'autre).
+Tâche : REMPLACE la tête de la personne entourée par le cercle rouge par la tête
+de la deuxième image (échange de visage). Impératifs :
+- CONSERVE le corps, la posture, les vêtements, la coiffure d'ensemble et la position de cette personne ;
+- adapte l'orientation, l'inclinaison, la carnation, l'éclairage et les ombres de
+  la nouvelle tête pour qu'elle se fonde naturellement sur le corps existant ;
+- N'AJOUTE aucune nouvelle personne ; ne modifie NI les autres personnes NI le décor ;
+- SUPPRIME complètement le cercle rouge de l'image finale ;
+- CONSERVE la projection ÉQUIRECTANGULAIRE 360° et le ratio 2:1.
 
-Place la personne dans une zone dégagée au sol, bien visible. Rends une seule
-image équirectangulaire finale.`;
+Rends une seule image équirectangulaire finale.`;
 
 // Récupère l'image générée (URL fal.media) et la renvoie en data URL, pour que
 // le client reçoive une image same-origin (pas de souci CORS pour la texture).

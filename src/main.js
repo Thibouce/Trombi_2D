@@ -1,7 +1,11 @@
 import { Panorama } from './scene/Panorama.js';
 import { createDemoPanorama } from './scene/demoPanorama.js';
 import { Webcam } from './capture/Webcam.js';
-import { toScaledDataURL, integrateIntoScene } from './capture/integrateClient.js';
+import {
+  toScaledDataURL,
+  buildMarkedScene,
+  integrateIntoScene,
+} from './capture/integrateClient.js';
 
 // ---- DOM ------------------------------------------------------------------
 const $ = (id) => document.getElementById(id);
@@ -14,6 +18,7 @@ const loader = $('loader');
 const state = {
   originalSceneDataUrl: null, // panorama d'origine (pour "réinitialiser")
   sceneDataUrl: null, // panorama courant envoyé au modèle
+  targetLook: { lon: 0, lat: 0 }, // tête visée (figée à l'ouverture de la capture)
 };
 
 // ---- Scène 360 ------------------------------------------------------------
@@ -46,6 +51,12 @@ function setCaptureState(mode) {
 }
 
 async function openCapture() {
+  // On fige la cible (tête visée) au moment où l'utilisateur ouvre la capture,
+  // et on stoppe le tour auto pour qu'elle ne bouge plus.
+  panorama.toggleAutoTour(false);
+  syncAutoTourButton();
+  state.targetLook = panorama.currentLook;
+
   capturePanel.classList.remove('hidden');
   setCaptureState('live');
   try {
@@ -70,16 +81,22 @@ function shoot() {
   setCaptureState('preview');
 }
 
-// Envoie la photo + le panorama courant à nanoBanana Pro, puis remplace la scène.
+// Envoie la photo + le panorama (marqué au point visé) à nanoBanana Pro, qui
+// remplace la tête du personnage visé par celle de la photo.
 async function integrate() {
   const frame = captureCanvas._frame;
   if (!frame) return;
-  showLoader('Intégration en cours… (nanoBanana Pro)');
+  showLoader('Remplacement du visage… (nanoBanana Pro)');
   try {
     const personDataUrl = toScaledDataURL(frame, 1024, 0.92);
+    const markedScene = await buildMarkedScene(
+      state.sceneDataUrl,
+      state.targetLook.lon,
+      state.targetLook.lat
+    );
     const editedDataUrl = await integrateIntoScene({
       personDataUrl,
-      sceneDataUrl: state.sceneDataUrl,
+      sceneDataUrl: markedScene,
     });
     await applySceneImage(editedDataUrl);
     // Les intégrations suivantes s'ajoutent à la scène déjà peuplée.
@@ -145,12 +162,13 @@ $('reset-btn').addEventListener('click', resetScene);
 $('pano-input').addEventListener('change', (e) => loadPanoramaFile(e.target.files[0]));
 
 const autotourBtn = $('autotour-btn');
-autotourBtn.addEventListener('click', () => {
-  const on = panorama.toggleAutoTour();
+function syncAutoTourButton() {
+  const on = panorama.autoTour;
   autotourBtn.setAttribute('aria-pressed', String(on));
   autotourBtn.textContent = on ? '⏸ Tour auto' : '▶ Tour auto';
+}
+autotourBtn.addEventListener('click', () => {
+  panorama.toggleAutoTour();
+  syncAutoTourButton();
 });
-panorama.onUserInteract = () => {
-  autotourBtn.setAttribute('aria-pressed', 'false');
-  autotourBtn.textContent = '▶ Tour auto';
-};
+panorama.onUserInteract = syncAutoTourButton;

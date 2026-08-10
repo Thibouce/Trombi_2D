@@ -168,4 +168,32 @@ html, body {
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
+/* Viseur central */
+#reticle {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  width: 46px;
+  height: 46px;
+  transform: translate(-50%, -50%);
+  border: 2px solid rgba(255, 80, 80, 0.9);
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.35), 0 0 12px rgba(255, 80, 80, 0.5);
+  pointer-events: none;
+  z-index: 5;
+}
+#reticle::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 4px;
+  height: 4px;
+  transform: translate(-50%, -50%);
+  background: rgba(255, 80, 80, 0.95);
+  border-radius: 50%;
+}
+/* Masqué quand un panneau modal est ouvert */
+body:has(#capture-panel:not(.hidden)) #reticle { display: none; }
+
 .hidden { display: none !important; }
