@@ -11,8 +11,8 @@ import { handleIntegrateRequest, DEFAULT_MODEL } from './server/integrate.js';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DIST = join(__dirname, 'dist');
 const PORT = process.env.PORT || 5173;
-const apiKey = process.env.GEMINI_API_KEY;
-const model = process.env.GEMINI_MODEL || DEFAULT_MODEL;
+const apiKey = process.env.FAL_KEY;
+const model = process.env.FAL_MODEL || DEFAULT_MODEL;
 
 const MIME = {
   '.html': 'text/html; charset=utf-8',
@@ -53,5 +53,5 @@ const server = http.createServer(async (req, res) => {
 
 server.listen(PORT, () => {
   console.log(`Trombi 2D sur http://localhost:${PORT}`);
-  if (!apiKey) console.warn('⚠️  GEMINI_API_KEY non défini : /api/integrate renverra une erreur.');
+  if (!apiKey) console.warn('⚠️  FAL_KEY non défini : /api/integrate renverra une erreur.');
 });

@@ -1,16 +1,14 @@
 // Handler d'intégration d'image, indépendant du framework.
 // Il reçoit la photo de la personne + le panorama équirectangulaire des locaux,
-// puis demande à nanoBanana Pro (Gemini image) de fondre la personne dans la
+// puis demande à nanoBanana Pro (via fal.ai) de fondre la personne dans la
 // scène, en conservant la projection 360° équirectangulaire (ratio 2:1).
 //
-// La clé API est lue côté serveur uniquement : elle ne transite jamais par le
-// navigateur.
+// La clé API fal.ai est lue côté serveur uniquement : elle ne transite jamais
+// par le navigateur.
 
-const API_ROOT = 'https://generativelanguage.googleapis.com/v1beta/models';
-
-// "nanoBanana Pro" = Gemini 3 Pro Image. (Le "nano banana" standard est
-// gemini-2.5-flash-image.) Surchargable via la variable d'env GEMINI_MODEL.
-export const DEFAULT_MODEL = 'gemini-3-pro-image-preview';
+// Endpoint synchrone fal.ai (attend le résultat). Modèle surchargeable via FAL_MODEL.
+const FAL_RUN = 'https://fal.run';
+export const DEFAULT_MODEL = 'fal-ai/nano-banana-pro/edit';
 
 const DEFAULT_PROMPT = `Tu édites une image panoramique équirectangulaire 360° (ratio 2:1) d'un lieu de bureau.
 Première image : la scène équirectangulaire (les locaux).
@@ -26,13 +24,17 @@ se tenait naturellement debout dans ces locaux. Respecte impérativement :
 Place la personne dans une zone dégagée au sol, bien visible. Rends une seule
 image équirectangulaire finale.`;
 
-function parseDataUrl(dataUrl) {
-  const m = /^data:([^;]+);base64,(.*)$/s.exec(dataUrl || '');
-  if (!m) throw new Error('Image invalide (data URL base64 attendue).');
-  return { mimeType: m[1], data: m[2] };
+// Récupère l'image générée (URL fal.media) et la renvoie en data URL, pour que
+// le client reçoive une image same-origin (pas de souci CORS pour la texture).
+async function fetchAsDataUrl(url) {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Téléchargement du résultat échoué (${res.status}).`);
+  const buf = Buffer.from(await res.arrayBuffer());
+  const mime = res.headers.get('content-type') || 'image/jpeg';
+  return `data:${mime};base64,${buf.toString('base64')}`;
 }
 
-// Appelle l'API Gemini et renvoie une data URL de l'image générée.
+// Appelle fal.ai (nanoBanana Pro edit) et renvoie une data URL de l'image générée.
 export async function integrate({
   apiKey,
   model = DEFAULT_MODEL,
@@ -42,60 +44,50 @@ export async function integrate({
 }) {
   if (!apiKey) {
     const err = new Error(
-      "Clé API manquante. Renseigne GEMINI_API_KEY dans un fichier .env (voir .env.example)."
+      "Clé API manquante. Renseigne FAL_KEY dans un fichier .env (voir .env.example)."
     );
     err.status = 500;
     throw err;
   }
-
-  const scene = parseDataUrl(sceneDataUrl);
-  const person = parseDataUrl(personDataUrl);
+  if (!sceneDataUrl || !personDataUrl) {
+    const err = new Error('Images manquantes (scène et/ou personne).');
+    err.status = 400;
+    throw err;
+  }
 
   const body = {
-    contents: [
-      {
-        role: 'user',
-        parts: [
-          { text: prompt },
-          { inline_data: { mime_type: scene.mimeType, data: scene.data } },
-          { inline_data: { mime_type: person.mimeType, data: person.data } },
-        ],
-      },
-    ],
-    generationConfig: { responseModalities: ['IMAGE'] },
+    prompt,
+    // Ordre attendu par le prompt : [scène, personne].
+    image_urls: [sceneDataUrl, personDataUrl],
+    num_images: 1,
+    output_format: 'jpeg',
   };
 
-  const res = await fetch(`${API_ROOT}/${model}:generateContent`, {
+  const res = await fetch(`${FAL_RUN}/${model}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'x-goog-api-key': apiKey,
+      Authorization: `Key ${apiKey}`,
     },
     body: JSON.stringify(body),
   });
 
   if (!res.ok) {
     const text = await res.text();
-    const err = new Error(`Gemini API ${res.status} : ${text.slice(0, 500)}`);
+    const err = new Error(`fal.ai ${res.status} : ${text.slice(0, 600)}`);
     err.status = res.status;
     throw err;
   }
 
   const json = await res.json();
-  const parts = json?.candidates?.[0]?.content?.parts ?? [];
-  const imagePart = parts.find((p) => p.inline_data || p.inlineData);
-  const inline = imagePart?.inline_data || imagePart?.inlineData;
-
-  if (!inline?.data) {
-    const reason =
-      json?.candidates?.[0]?.finishReason ||
-      parts.find((p) => p.text)?.text ||
-      'aucune image renvoyée';
-    throw new Error(`Le modèle n'a pas renvoyé d'image (${reason}).`);
+  const imageUrl = json?.images?.[0]?.url;
+  if (!imageUrl) {
+    throw new Error(
+      `Aucune image renvoyée par fal.ai (${JSON.stringify(json).slice(0, 300)}).`
+    );
   }
 
-  const mime = inline.mime_type || inline.mimeType || 'image/png';
-  return `data:${mime};base64,${inline.data}`;
+  return fetchAsDataUrl(imageUrl);
 }
 
 // Lit un corps de requête JSON (Node http) avec une limite de taille.

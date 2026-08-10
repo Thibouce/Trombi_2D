@@ -8,8 +8,8 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [
       apiPlugin({
-        apiKey: env.GEMINI_API_KEY,
-        model: env.GEMINI_MODEL || DEFAULT_MODEL,
+        apiKey: env.FAL_KEY,
+        model: env.FAL_MODEL || DEFAULT_MODEL,
       }),
     ],
     server: { host: true, port: 5173 },

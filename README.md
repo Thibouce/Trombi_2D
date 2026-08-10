@@ -9,9 +9,9 @@ parfait pour une borne d'accueil, un salon ou un mur d'écran.
 
 1. **Capture** — l'utilisateur se prend en photo (webcam, cadrage guidé par un ovale).
 2. **Intégration IA** — la photo + le panorama équirectangulaire sont envoyés à
-   **nanoBanana Pro** (Gemini 3 Pro Image) via un **proxy serveur**. Le modèle
-   fond la personne dans la scène (échelle, perspective, éclairage, ombres) et
-   renvoie un nouveau panorama équirectangulaire.
+   **nanoBanana Pro** (via **fal.ai**) au travers d'un **proxy serveur**. Le
+   modèle fond la personne dans la scène (échelle, perspective, éclairage,
+   ombres) et renvoie un nouveau panorama équirectangulaire.
 3. **Immersion** — le panorama édité remplace la scène ; la caméra pivote en
    « tour auto » ou l'utilisateur regarde autour (glisser / molette pour zoomer).
 
@@ -22,7 +22,7 @@ parfait pour une borne d'accueil, un salon ou un mur d'écran.
 
 ```bash
 npm install
-cp .env.example .env      # puis renseigne GEMINI_API_KEY
+cp .env.example .env      # puis renseigne FAL_KEY
 npm run dev
 ```
 
@@ -40,15 +40,16 @@ npm start                 # node --env-file=.env server.js  → http://localhost
 
 ## 🔑 Clé API
 
-1. Crée une clé sur [Google AI Studio](https://aistudio.google.com/apikey).
+1. Crée une clé sur [fal.ai — API Keys](https://fal.ai/dashboard/keys).
 2. Renseigne-la dans `.env` :
 
    ```env
-   GEMINI_API_KEY=ta_cle
-   GEMINI_MODEL=gemini-3-pro-image-preview   # nanoBanana Pro (défaut)
+   FAL_KEY=ta_cle_fal
+   FAL_MODEL=fal-ai/nano-banana-pro/edit   # défaut
    ```
 
-   Pour le « nano banana » standard : `GEMINI_MODEL=gemini-2.5-flash-image`.
+Le serveur appelle l'endpoint synchrone `https://fal.run/<FAL_MODEL>` avec les
+deux images (data URI) et récupère l'image éditée.
 
 ## 🖼️ Utiliser tes propres locaux
 
@@ -76,7 +77,7 @@ src/
     Webcam.js             # accès webcam + capture d'image
     integrateClient.js    # redimensionnement + appel /api/integrate
 server/
-  integrate.js            # appel nanoBanana Pro (clé API côté serveur)
+  integrate.js            # appel nanoBanana Pro via fal.ai (clé API côté serveur)
   vite-api-plugin.js      # expose /api/integrate en développement
 ```
 
@@ -93,4 +94,4 @@ server/
 
 - [Three.js](https://threejs.org/) — rendu 3D / 360
 - [Vite](https://vitejs.dev/) — dev server & build
-- [Gemini API — nanoBanana Pro](https://ai.google.dev/) — édition d'image
+- [fal.ai — nanoBanana Pro](https://fal.ai/models/fal-ai/nano-banana-pro/edit) — édition d'image
