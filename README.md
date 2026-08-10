@@ -7,23 +7,13 @@ parfait pour une borne d'accueil, un salon ou un mur d'écran.
 
 ## ✨ Fonctionnement
 
-Le principe : **le visage de l'utilisateur remplace la tête d'un personnage déjà
-présent** dans le panorama des locaux (le corps, les vêtements et la posture du
-personnage sont conservés).
-
-1. **Visée** — l'utilisateur oriente la vue pour placer le **réticule central 🎯**
-   sur la tête du personnage à remplacer.
-2. **Capture** — il se prend en photo (webcam, cadrage guidé par un ovale). La
-   cible est figée à l'ouverture de la capture.
-3. **Remplacement IA** — la photo + le panorama (sur lequel un **repère rouge**
-   marque la tête visée) sont envoyés à **nanoBanana Pro** (via **fal.ai**) au
-   travers d'un **proxy serveur**. Le modèle échange le visage, adapte l'éclairage
-   et les ombres, retire le repère et renvoie un nouveau panorama.
-4. **Immersion** — le panorama édité remplace la scène ; la caméra pivote en
+1. **Capture** — l'utilisateur se prend en photo (webcam, cadrage guidé par un ovale).
+2. **Intégration IA** — la photo + le panorama équirectangulaire sont envoyés à
+   **nanoBanana Pro** (via **fal.ai**) au travers d'un **proxy serveur**. Le
+   modèle fond la personne dans la scène (échelle, perspective, éclairage,
+   ombres) et renvoie un nouveau panorama équirectangulaire.
+3. **Immersion** — le panorama édité remplace la scène ; la caméra pivote en
    « tour auto » ou l'utilisateur regarde autour (glisser / molette pour zoomer).
-
-> 🎯 Le mapping visée → repère utilise la convention équirectangulaire de la
-> sphère (`u = lon/360`, `v = (90 − lat)/180`).
 
 > 🔒 La **clé API reste côté serveur** : le navigateur appelle `/api/integrate`,
 > jamais l'API Gemini directement.

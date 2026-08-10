@@ -71,57 +71,14 @@ export function createDemoPanorama(width = 4096, height = 2048) {
     ctx.strokeRect(wx - ww / 2, wy, ww, wh);
   }
 
-  // Quelques personnages "placeholder" : c'est l'une de ces têtes que l'IA
-  // remplacera. (Ta vraie photo 360 aura de vraies personnes.)
-  const people = [
-    { x: 0.25, color: '#c65b7c' },
-    { x: 0.5, color: '#4f9d8f' },
-    { x: 0.75, color: '#c8934f' },
-  ];
-  for (const p of people) {
-    drawPerson(ctx, p.x * width, horizon + height * 0.11, height * 0.0016, p.color);
-  }
-
-  // Texte d'aide (au-dessus, yaw 0)
+  // Texte d'aide au centre (yaw 0) — repère "avant"
   ctx.save();
-  ctx.translate(width * 0.5, horizon - height * 0.16);
+  ctx.translate(width * 0.5, horizon - 120);
   ctx.textAlign = 'center';
-  ctx.fillStyle = 'rgba(255,255,255,0.6)';
-  ctx.font = `bold ${Math.round(height * 0.024)}px system-ui, sans-serif`;
-  ctx.fillText('PANORAMA DE DÉMO — vise une tête et remplace-la', 0, 0);
+  ctx.fillStyle = 'rgba(255,255,255,0.65)';
+  ctx.font = `bold ${Math.round(height * 0.028)}px system-ui, sans-serif`;
+  ctx.fillText('PANORAMA DE DÉMO — remplace-moi par tes locaux 360°', 0, 0);
   ctx.restore();
 
   return canvas;
-}
-
-// Dessine une silhouette debout (corps + tête) posée au sol.
-function drawPerson(ctx, cx, floorY, scale, color) {
-  const bodyH = 320 * scale;
-  const bodyW = 150 * scale;
-  const headR = 62 * scale;
-  const headY = floorY - bodyH - headR * 0.7;
-
-  ctx.save();
-  // Ombre au sol
-  ctx.fillStyle = 'rgba(0,0,0,0.28)';
-  ctx.beginPath();
-  ctx.ellipse(cx, floorY + 6, bodyW * 0.7, bodyH * 0.05, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Corps
-  ctx.fillStyle = color;
-  ctx.beginPath();
-  ctx.roundRect(cx - bodyW / 2, floorY - bodyH, bodyW, bodyH, [bodyW / 2, bodyW / 2, bodyW * 0.18, bodyW * 0.18]);
-  ctx.fill();
-
-  // Cou
-  ctx.fillStyle = '#e6c39a';
-  ctx.fillRect(cx - headR * 0.28, headY, headR * 0.56, headR * 1.1);
-
-  // Tête
-  ctx.beginPath();
-  ctx.arc(cx, headY, headR, 0, Math.PI * 2);
-  ctx.fillStyle = '#eccaa0';
-  ctx.fill();
-  ctx.restore();
 }
