@@ -1,71 +1,96 @@
 # Trombi 2D — Expérience immersive 360°
 
-Une personne se prend en photo à la webcam, sa **tête est détourée**, puis
-**intégrée dans un panorama 360° des locaux de l'entreprise**. La caméra se
-balade dans la scène pour une expérience immersive — parfait pour une borne
-d'accueil, un salon ou un mur d'écran.
+Une personne se prend en photo à la webcam, puis **nanoBanana Pro** (Gemini
+image) l'**intègre directement dans un panorama 360° des locaux de
+l'entreprise**. La caméra pivote dans la scène pour une expérience immersive —
+parfait pour une borne d'accueil, un salon ou un mur d'écran.
 
 ## ✨ Fonctionnement
 
 1. **Capture** — l'utilisateur se prend en photo (webcam, cadrage guidé par un ovale).
-2. **Détourage** — le fond est retiré :
-   - via **MediaPipe Selfie Segmentation** (chargé depuis un CDN) si disponible ;
-   - sinon repli 100 % local : découpe ovale à bords adoucis.
-3. **Intégration** — la tête détourée est posée comme un *billboard* dans une
-   sphère 360° équirectangulaire, à l'endroit visé par la caméra.
-4. **Immersion** — la caméra pivote en « tour auto », ou l'utilisateur regarde
-   autour de lui (glisser / molette pour zoomer).
+2. **Intégration IA** — la photo + le panorama équirectangulaire sont envoyés à
+   **nanoBanana Pro** (Gemini 3 Pro Image) via un **proxy serveur**. Le modèle
+   fond la personne dans la scène (échelle, perspective, éclairage, ombres) et
+   renvoie un nouveau panorama équirectangulaire.
+3. **Immersion** — le panorama édité remplace la scène ; la caméra pivote en
+   « tour auto » ou l'utilisateur regarde autour (glisser / molette pour zoomer).
+
+> 🔒 La **clé API reste côté serveur** : le navigateur appelle `/api/integrate`,
+> jamais l'API Gemini directement.
 
 ## 🚀 Démarrer
 
 ```bash
 npm install
+cp .env.example .env      # puis renseigne GEMINI_API_KEY
 npm run dev
 ```
 
-Puis ouvre l'URL affichée (autorise l'accès à la webcam).
+Ouvre l'URL affichée (autorise l'accès à la webcam).
+
+**En production :**
+
+```bash
+npm run build
+npm start                 # node --env-file=.env server.js  → http://localhost:5173
+```
 
 > ℹ️ La webcam nécessite un contexte sécurisé : `localhost` fonctionne, sinon
 > déploie en **HTTPS**.
 
+## 🔑 Clé API
+
+1. Crée une clé sur [Google AI Studio](https://aistudio.google.com/apikey).
+2. Renseigne-la dans `.env` :
+
+   ```env
+   GEMINI_API_KEY=ta_cle
+   GEMINI_MODEL=gemini-3-pro-image-preview   # nanoBanana Pro (défaut)
+   ```
+
+   Pour le « nano banana » standard : `GEMINI_MODEL=gemini-2.5-flash-image`.
+
 ## 🖼️ Utiliser tes propres locaux
 
 Le projet démarre avec un **panorama de démonstration** généré à la volée.
-Pour mettre tes locaux : bouton **« 🌐 Charger un panorama »** et sélectionne
-une image **équirectangulaire** (projection 360°, ratio **2:1**, ex. 4096×2048).
+Bouton **« 🌐 Charger un panorama »** pour sélectionner une image
+**équirectangulaire** (projection 360°, ratio **2:1**, ex. 4096×2048), issue
+d'une caméra 360 (Insta360, Ricoh Theta…) ou d'un assemblage (Hugin / PTGui).
 
-Comment obtenir une telle image :
-- une caméra 360 (Insta360, Ricoh Theta…) ;
-- l'assemblage (*stitching*) de photos avec Hugin / PTGui ;
-- une appli de panorama sur smartphone.
+Le bouton **« ↺ Réinitialiser »** restaure le panorama d'origine (vide de toute
+personne). Les intégrations successives s'ajoutent à la scène courante.
 
 ## 🗂️ Structure
 
 ```
 index.html
+server.js                 # serveur de production (statique + /api/integrate)
+vite.config.js            # branche le proxy API en dev, charge .env
 src/
   main.js                 # orchestration + UI
   styles.css
   scene/
-    Panorama.js           # visionneuse 360 (sphère, caméra, contrôles)
-    PhotoBillboard.js      # tête détourée -> objet 3D dans la scène
-    demoPanorama.js        # panorama équirectangulaire de démo (procédural)
+    Panorama.js           # visionneuse 360 (sphère, caméra panoramique)
+    demoPanorama.js       # panorama équirectangulaire de démo (procédural)
   capture/
     Webcam.js             # accès webcam + capture d'image
-    segmentation.js       # détourage (MediaPipe + repli ovale)
+    integrateClient.js    # redimensionnement + appel /api/integrate
+server/
+  integrate.js            # appel nanoBanana Pro (clé API côté serveur)
+  vite-api-plugin.js      # expose /api/integrate en développement
 ```
 
 ## 🧭 Pistes d'évolution
 
-- **Édition IA générative** : remplacer le billboard 2D par une fusion
-  photoréaliste du visage dans la scène (inpainting / API type Gemini).
-- **Multi-points 360** : passer d'un panorama à l'autre pour vraiment *se
-  déplacer* dans les locaux (parallaxe, hotspots).
-- **Galerie** : mémoriser les têtes intégrées et les faire défiler (mur social).
-- **Partage** : capture d'écran de la scène + QR code pour repartir avec.
+- **Multi-points 360** : relier plusieurs panoramas par des points de passage
+  pour vraiment se déplacer dans les locaux.
+- **Galerie / mur social** : mémoriser les intégrations et les faire défiler.
+- **Partage** : capture de la vue + QR code pour repartir avec.
+- **Qualité** : affiner le prompt d'intégration, ou passer par un rendu
+  rectilinéaire (vue « à plat ») réinjecté dans l'équirectangulaire.
 
 ## 🛠️ Stack
 
 - [Three.js](https://threejs.org/) — rendu 3D / 360
 - [Vite](https://vitejs.dev/) — dev server & build
-- [MediaPipe Tasks Vision](https://ai.google.dev/edge/mediapipe) — détourage (optionnel)
+- [Gemini API — nanoBanana Pro](https://ai.google.dev/) — édition d'image

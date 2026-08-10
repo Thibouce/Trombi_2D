@@ -1,37 +1,43 @@
-import * as THREE from 'three';
 import { Panorama } from './scene/Panorama.js';
-import { createPhotoBillboard } from './scene/PhotoBillboard.js';
 import { createDemoPanorama } from './scene/demoPanorama.js';
 import { Webcam } from './capture/Webcam.js';
-import { removeBackground } from './capture/segmentation.js';
+import { toScaledDataURL, integrateIntoScene } from './capture/integrateClient.js';
 
-// ---- Éléments du DOM ------------------------------------------------------
+// ---- DOM ------------------------------------------------------------------
 const $ = (id) => document.getElementById(id);
 const capturePanel = $('capture-panel');
 const video = $('webcam');
 const captureCanvas = $('capture-canvas');
 const loader = $('loader');
 
+// ---- État -----------------------------------------------------------------
+const state = {
+  originalSceneDataUrl: null, // panorama d'origine (pour "réinitialiser")
+  sceneDataUrl: null, // panorama courant envoyé au modèle
+};
+
 // ---- Scène 360 ------------------------------------------------------------
 const panorama = new Panorama($('scene'));
-panorama.setPanoramaTexture(createDemoPanorama());
+const demo = createDemoPanorama();
+panorama.setPanoramaTexture(demo);
 panorama.start();
+// La démo sert de scène de base par défaut.
+state.originalSceneDataUrl = toScaledDataURL(demo, 2048, 0.9);
+state.sceneDataUrl = state.originalSceneDataUrl;
 
 // ---- Webcam ---------------------------------------------------------------
 const webcam = new Webcam(video);
-let lastCutout = null; // { canvas, aspect } de la dernière tête détourée
 
-// ---- Utilitaires UI -------------------------------------------------------
-function showLoader(text = 'Traitement…') {
-  loader.querySelector('span').textContent = text;
+// ---- Helpers UI -----------------------------------------------------------
+function showLoader(text) {
+  loader.querySelector('span').textContent = text || 'Traitement…';
   loader.classList.remove('hidden');
 }
 function hideLoader() {
   loader.classList.add('hidden');
 }
-function setCaptureState(state) {
-  // states: 'live' | 'preview'
-  const live = state === 'live';
+function setCaptureState(mode) {
+  const live = mode === 'live';
   $('shoot-btn').classList.toggle('hidden', !live);
   video.classList.toggle('hidden', !live);
   captureCanvas.classList.toggle('hidden', live);
@@ -54,70 +60,88 @@ function closeCapture() {
   capturePanel.classList.add('hidden');
 }
 
-// Prend la photo et affiche l'aperçu figé.
+// Fige la photo dans l'aperçu.
 function shoot() {
   const frame = webcam.grabFrame();
-  lastCutout = null;
   captureCanvas.width = frame.width;
   captureCanvas.height = frame.height;
   captureCanvas.getContext('2d').drawImage(frame, 0, 0);
-  captureCanvas._frame = frame; // conserve la source pour le détourage
+  captureCanvas._frame = frame;
   setCaptureState('preview');
 }
 
-// Détoure la tête et l'intègre dans la scène 360.
-async function placeInScene() {
+// Envoie la photo + le panorama courant à nanoBanana Pro, puis remplace la scène.
+async function integrate() {
   const frame = captureCanvas._frame;
   if (!frame) return;
-  showLoader('Détourage de ta tête…');
+  showLoader('Intégration en cours… (nanoBanana Pro)');
   try {
-    const cutout = await removeBackground(frame);
-    lastCutout = cutout;
-
-    // Place la tête là où la caméra regarde actuellement.
-    const look = panorama.currentLook;
-    const billboard = createPhotoBillboard(cutout.canvas, {
-      width: 46,
-      aspect: cutout.aspect,
+    const personDataUrl = toScaledDataURL(frame, 1024, 0.92);
+    const editedDataUrl = await integrateIntoScene({
+      personDataUrl,
+      sceneDataUrl: state.sceneDataUrl,
     });
-    const pos = panorama.directionToPosition(look.lon, look.lat, 130);
-    billboard.position.copy(pos);
-    billboard.userData.baseY = pos.y;
-    panorama.addOverlayObject(billboard);
-
+    await applySceneImage(editedDataUrl);
+    // Les intégrations suivantes s'ajoutent à la scène déjà peuplée.
+    state.sceneDataUrl = editedDataUrl;
     closeCapture();
   } catch (err) {
     console.error(err);
-    alert('Oups, le détourage a échoué : ' + err.message);
+    alert("L'intégration a échoué : " + err.message);
   } finally {
     hideLoader();
   }
 }
 
-// Charge un panorama équirectangulaire fourni par l'utilisateur.
-function loadPanoramaFile(file) {
-  if (!file) return;
-  showLoader('Chargement du panorama…');
-  const url = URL.createObjectURL(file);
-  const img = new Image();
-  img.onload = () => {
-    panorama.setPanoramaTexture(img);
-    URL.revokeObjectURL(url);
-    hideLoader();
-  };
-  img.onerror = () => {
-    hideLoader();
-    alert('Image invalide.');
-  };
-  img.src = url;
+// Charge une image (data URL ou objet URL) comme texture de panorama.
+function applySceneImage(url) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      panorama.setPanoramaTexture(img);
+      resolve();
+    };
+    img.onerror = () => reject(new Error('Image de scène invalide.'));
+    img.src = url;
+  });
 }
 
-// ---- Branchements des événements -----------------------------------------
+// Charge un panorama équirectangulaire fourni par l'utilisateur.
+async function loadPanoramaFile(file) {
+  if (!file) return;
+  showLoader('Chargement du panorama…');
+  try {
+    const dataUrl = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+    await applySceneImage(dataUrl);
+    const img = new Image();
+    img.src = dataUrl;
+    await img.decode();
+    state.originalSceneDataUrl = toScaledDataURL(img, 2048, 0.9);
+    state.sceneDataUrl = state.originalSceneDataUrl;
+  } catch (err) {
+    alert('Image invalide : ' + err.message);
+  } finally {
+    hideLoader();
+  }
+}
+
+async function resetScene() {
+  await applySceneImage(state.originalSceneDataUrl);
+  state.sceneDataUrl = state.originalSceneDataUrl;
+}
+
+// ---- Événements -----------------------------------------------------------
 $('open-capture').addEventListener('click', openCapture);
 $('capture-cancel').addEventListener('click', closeCapture);
 $('shoot-btn').addEventListener('click', shoot);
 $('retake-btn').addEventListener('click', () => setCaptureState('live'));
-$('place-btn').addEventListener('click', placeInScene);
+$('place-btn').addEventListener('click', integrate);
+$('reset-btn').addEventListener('click', resetScene);
 $('pano-input').addEventListener('change', (e) => loadPanoramaFile(e.target.files[0]));
 
 const autotourBtn = $('autotour-btn');

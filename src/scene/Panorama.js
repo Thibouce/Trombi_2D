@@ -1,9 +1,10 @@
 import * as THREE from 'three';
 
 // Visionneuse 360° : une sphère texturée vue de l'intérieur.
-// - glisser (souris/tactile) pour regarder autour
-// - "tour auto" : la caméra pivote doucement toute seule
-// - léger balancement de position pour donner l'impression que la caméra "se balade"
+// Mouvements strictement panoramiques (rotation depuis le centre) :
+//  - glisser (souris / tactile) pour regarder autour
+//  - "tour auto" : la caméra pivote doucement toute seule
+//  - molette pour zoomer (FOV)
 export class Panorama {
   constructor(canvas) {
     this.canvas = canvas;
@@ -13,7 +14,7 @@ export class Panorama {
 
     this.scene = new THREE.Scene();
     this.camera = new THREE.PerspectiveCamera(72, 1, 0.1, 1100);
-    this.camera.position.set(0, 0, 0.01);
+    this.camera.position.set(0, 0, 0);
 
     // Sphère retournée : on la voit de l'intérieur.
     const geometry = new THREE.SphereGeometry(500, 64, 40);
@@ -22,13 +23,9 @@ export class Panorama {
     this.sphere = new THREE.Mesh(geometry, this.sphereMat);
     this.scene.add(this.sphere);
 
-    // Groupe qui accueille les têtes intégrées.
-    this.overlay = new THREE.Group();
-    this.scene.add(this.overlay);
-
-    // État caméra (orientation).
-    this.lon = 0;      // yaw en degrés
-    this.lat = 0;      // pitch en degrés
+    // Orientation caméra.
+    this.lon = 0; // yaw (degrés)
+    this.lat = 0; // pitch (degrés)
     this.autoTour = true;
     this.autoSpeed = 3.5; // deg/seconde
 
@@ -41,6 +38,7 @@ export class Panorama {
     window.addEventListener('resize', () => this._onResize());
   }
 
+  // Applique une texture équirectangulaire (Image, Canvas ou THREE.Texture).
   setPanoramaTexture(source) {
     const texture =
       source instanceof THREE.Texture ? source : new THREE.Texture(source);
@@ -50,37 +48,6 @@ export class Panorama {
     this.sphereMat.map = texture;
     this.sphereMat.color.set(0xffffff);
     this.sphereMat.needsUpdate = true;
-  }
-
-  addOverlayObject(obj3d) {
-    this.overlay.add(obj3d);
-  }
-
-  clearOverlay() {
-    for (const child of [...this.overlay.children]) {
-      this.overlay.remove(child);
-      child.traverse?.((n) => {
-        n.geometry?.dispose?.();
-        n.material?.map?.dispose?.();
-        n.material?.dispose?.();
-      });
-    }
-  }
-
-  // Position (yaw/pitch en degrés) devant la caméra, à un rayon donné.
-  directionToPosition(lonDeg, latDeg, radius = 120) {
-    const phi = THREE.MathUtils.degToRad(90 - latDeg);
-    const theta = THREE.MathUtils.degToRad(lonDeg);
-    return new THREE.Vector3(
-      radius * Math.sin(phi) * Math.cos(theta),
-      radius * Math.cos(phi),
-      radius * Math.sin(phi) * Math.sin(theta)
-    );
-  }
-
-  // Direction actuelle du regard (pour placer la tête "là où on regarde").
-  get currentLook() {
-    return { lon: this.lon, lat: this.lat };
   }
 
   toggleAutoTour(force) {
@@ -117,7 +84,6 @@ export class Panorama {
     window.addEventListener('pointerup', up);
     window.addEventListener('pointercancel', up);
 
-    // Zoom molette (FOV).
     el.addEventListener(
       'wheel',
       (e) => {
@@ -152,16 +118,10 @@ export class Panorama {
 
   _update() {
     const dt = this._clock.getDelta();
-    const t = this._clock.elapsedTime;
 
     if (this.autoTour && !this._pointer.active) {
       this.lon += this.autoSpeed * dt;
     }
-
-    // Léger balancement -> sensation de caméra qui "se balade".
-    const bobX = Math.sin(t * 0.6) * 1.4;
-    const bobY = Math.cos(t * 0.45) * 0.9;
-    this.camera.position.set(bobX, bobY, 0.01);
 
     const phi = THREE.MathUtils.degToRad(90 - this.lat);
     const theta = THREE.MathUtils.degToRad(this.lon);
@@ -170,15 +130,6 @@ export class Panorama {
       500 * Math.cos(phi),
       500 * Math.sin(phi) * Math.sin(theta)
     );
-    this.camera.lookAt(this._target.add(this.camera.position));
-
-    // Les têtes intégrées font toujours face à la caméra (effet billboard).
-    for (const child of this.overlay.children) {
-      if (child.userData.billboard) child.lookAt(this.camera.position);
-      if (child.userData.float != null) {
-        child.position.y =
-          child.userData.baseY + Math.sin(t * 1.4 + child.userData.float) * 2.2;
-      }
-    }
+    this.camera.lookAt(this._target);
   }
 }

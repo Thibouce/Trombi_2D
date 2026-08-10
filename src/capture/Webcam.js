@@ -32,17 +32,16 @@ export class Webcam {
     this.video.srcObject = null;
   }
 
-  // Capture l'image courante (miroir, pour correspondre à l'aperçu) dans un canvas.
+  // Capture l'image courante (orientation naturelle) dans un canvas.
+  // L'aperçu est mis en miroir via CSS ; les pixels restent, eux, naturels
+  // pour être envoyés tels quels au modèle d'édition d'image.
   grabFrame() {
     const w = this.video.videoWidth;
     const h = this.video.videoHeight;
     const canvas = document.createElement('canvas');
     canvas.width = w;
     canvas.height = h;
-    const ctx = canvas.getContext('2d');
-    ctx.translate(w, 0);
-    ctx.scale(-1, 1); // miroir horizontal
-    ctx.drawImage(this.video, 0, 0, w, h);
+    canvas.getContext('2d').drawImage(this.video, 0, 0, w, h);
     return canvas;
   }
 }
