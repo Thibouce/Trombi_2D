@@ -1,22 +1,23 @@
 # Trombi 2D — Expérience immersive 360°
 
-Une personne se prend en photo à la webcam, puis **nanoBanana Pro** (Gemini
-image) l'**intègre directement dans un panorama 360° des locaux de
-l'entreprise**. La caméra pivote dans la scène pour une expérience immersive —
-parfait pour une borne d'accueil, un salon ou un mur d'écran.
+Une personne se prend en photo à la webcam, puis **GPT Image 2** (via fal.ai)
+l'**intègre directement dans un panorama 360° des locaux de l'entreprise**. La
+caméra pivote dans la scène pour une expérience immersive — parfait pour une
+borne d'accueil, un salon ou un mur d'écran.
 
 ## ✨ Fonctionnement
 
 1. **Capture** — l'utilisateur se prend en photo (webcam, cadrage guidé par un ovale).
 2. **Intégration IA** — la photo + le panorama équirectangulaire sont envoyés à
-   **nanoBanana Pro** (via **fal.ai**) au travers d'un **proxy serveur**. Le
-   modèle fond la personne dans la scène (échelle, perspective, éclairage,
-   ombres) et renvoie un nouveau panorama équirectangulaire.
+   **GPT Image 2** (via **fal.ai**) au travers d'un **proxy serveur**. Le modèle
+   fond la personne dans la scène (échelle, perspective, éclairage, ombres) et
+   renvoie un nouveau panorama équirectangulaire. La taille de sortie est forcée
+   en **2:1** (`FAL_IMAGE_SIZE`) pour préserver la projection équirectangulaire.
 3. **Immersion** — le panorama édité remplace la scène ; la caméra pivote en
    « tour auto » ou l'utilisateur regarde autour (glisser / molette pour zoomer).
 
 > 🔒 La **clé API reste côté serveur** : le navigateur appelle `/api/integrate`,
-> jamais l'API Gemini directement.
+> jamais l'API fal.ai directement.
 
 ## 🚀 Démarrer
 
@@ -45,11 +46,15 @@ npm start                 # node --env-file=.env server.js  → http://localhost
 
    ```env
    FAL_KEY=ta_cle_fal
-   FAL_MODEL=fal-ai/nano-banana-pro/edit   # défaut
+   FAL_MODEL=openai/gpt-image-2/edit   # défaut
+   FAL_IMAGE_SIZE=1536x768             # 2:1 pour l'équirectangulaire
    ```
 
 Le serveur appelle l'endpoint synchrone `https://fal.run/<FAL_MODEL>` avec les
 deux images (data URI) et récupère l'image éditée.
+
+> ⚠️ `input_fidelity` n'est **pas** envoyé : GPT Image 2 le refuse (il traite
+> toujours les entrées en haute fidélité).
 
 ## 🖼️ Utiliser tes propres locaux
 
@@ -77,7 +82,7 @@ src/
     Webcam.js             # accès webcam + capture d'image
     integrateClient.js    # redimensionnement + appel /api/integrate
 server/
-  integrate.js            # appel nanoBanana Pro via fal.ai (clé API côté serveur)
+  integrate.js            # appel GPT Image 2 via fal.ai (clé API côté serveur)
   vite-api-plugin.js      # expose /api/integrate en développement
 ```
 
@@ -94,4 +99,4 @@ server/
 
 - [Three.js](https://threejs.org/) — rendu 3D / 360
 - [Vite](https://vitejs.dev/) — dev server & build
-- [fal.ai — nanoBanana Pro](https://fal.ai/models/fal-ai/nano-banana-pro/edit) — édition d'image
+- [fal.ai — GPT Image 2](https://fal.ai/models/openai/gpt-image-2/edit) — édition d'image

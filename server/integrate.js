@@ -1,14 +1,29 @@
 // Handler d'intégration d'image, indépendant du framework.
 // Il reçoit la photo de la personne + le panorama équirectangulaire des locaux,
-// puis demande à nanoBanana Pro (via fal.ai) de fondre la personne dans la
-// scène, en conservant la projection 360° équirectangulaire (ratio 2:1).
+// puis demande à GPT Image 2 (via fal.ai) de fondre la personne dans la scène,
+// en conservant la projection 360° équirectangulaire (ratio 2:1).
 //
 // La clé API fal.ai est lue côté serveur uniquement : elle ne transite jamais
 // par le navigateur.
 
 // Endpoint synchrone fal.ai (attend le résultat). Modèle surchargeable via FAL_MODEL.
 const FAL_RUN = 'https://fal.run';
-export const DEFAULT_MODEL = 'fal-ai/nano-banana-pro/edit';
+export const DEFAULT_MODEL = 'openai/gpt-image-2/edit';
+
+// Taille de sortie par défaut : 2:1 explicite pour préserver l'équirectangulaire.
+// gpt-image-2/edit accepte soit un objet {width,height}, soit un enum
+// (ex. "landscape_16_9", "square_hd", "auto"). Surchargeable via FAL_IMAGE_SIZE.
+export const DEFAULT_IMAGE_SIZE = { width: 1536, height: 768 };
+
+// Convertit une valeur d'env en image_size : "1536x768" -> {width,height},
+// sinon renvoie la chaîne telle quelle (enum), ou undefined si vide.
+export function parseImageSize(value) {
+  if (!value) return undefined;
+  if (typeof value !== 'string') return value;
+  const m = /^(\d+)\s*[x×]\s*(\d+)$/i.exec(value.trim());
+  if (m) return { width: Number(m[1]), height: Number(m[2]) };
+  return value.trim(); // enum
+}
 
 const DEFAULT_PROMPT = `Tu édites une image panoramique équirectangulaire 360° (ratio 2:1) d'un lieu de bureau.
 Première image : la scène équirectangulaire (les locaux).
@@ -34,13 +49,16 @@ async function fetchAsDataUrl(url) {
   return `data:${mime};base64,${buf.toString('base64')}`;
 }
 
-// Appelle fal.ai (nanoBanana Pro edit) et renvoie une data URL de l'image générée.
+// Appelle fal.ai (GPT Image 2 edit) et renvoie une data URL de l'image générée.
 export async function integrate({
   apiKey,
   model = DEFAULT_MODEL,
   personDataUrl,
   sceneDataUrl,
   prompt = DEFAULT_PROMPT,
+  imageSize = DEFAULT_IMAGE_SIZE,
+  quality, // "low" | "medium" | "high" | "auto" (optionnel)
+  outputFormat = 'jpeg',
 }) {
   if (!apiKey) {
     const err = new Error(
@@ -60,8 +78,11 @@ export async function integrate({
     // Ordre attendu par le prompt : [scène, personne].
     image_urls: [sceneDataUrl, personDataUrl],
     num_images: 1,
-    output_format: 'jpeg',
   };
+  // N.B. : ne PAS envoyer input_fidelity — gpt-image-2 le refuse (toujours haute fidélité).
+  if (imageSize) body.image_size = imageSize;
+  if (quality) body.quality = quality;
+  if (outputFormat) body.output_format = outputFormat;
 
   const res = await fetch(`${FAL_RUN}/${model}`, {
     method: 'POST',
@@ -116,7 +137,9 @@ export function readJsonBody(req, limitBytes = 40 * 1024 * 1024) {
 }
 
 // Middleware générique (compatible Node http et Connect/Vite).
-export async function handleIntegrateRequest(req, res, { apiKey, model }) {
+// `options` (issu de la config serveur) : { imageSize, quality, outputFormat }.
+// Le corps de la requête peut surcharger prompt / imageSize / quality au cas par cas.
+export async function handleIntegrateRequest(req, res, { apiKey, model, options = {} }) {
   try {
     const payload = await readJsonBody(req);
     const image = await integrate({
@@ -125,6 +148,9 @@ export async function handleIntegrateRequest(req, res, { apiKey, model }) {
       personDataUrl: payload.personDataUrl,
       sceneDataUrl: payload.sceneDataUrl,
       prompt: payload.prompt,
+      imageSize: payload.imageSize ?? options.imageSize,
+      quality: payload.quality ?? options.quality,
+      outputFormat: payload.outputFormat ?? options.outputFormat,
     });
     res.statusCode = 200;
     res.setHeader('Content-Type', 'application/json');

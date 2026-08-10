@@ -6,13 +6,23 @@ import { readFile } from 'node:fs/promises';
 import { extname, join, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { dirname } from 'node:path';
-import { handleIntegrateRequest, DEFAULT_MODEL } from './server/integrate.js';
+import {
+  handleIntegrateRequest,
+  DEFAULT_MODEL,
+  DEFAULT_IMAGE_SIZE,
+  parseImageSize,
+} from './server/integrate.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DIST = join(__dirname, 'dist');
 const PORT = process.env.PORT || 5173;
 const apiKey = process.env.FAL_KEY;
 const model = process.env.FAL_MODEL || DEFAULT_MODEL;
+const options = {
+  imageSize: parseImageSize(process.env.FAL_IMAGE_SIZE) || DEFAULT_IMAGE_SIZE,
+  quality: process.env.FAL_QUALITY || undefined,
+  outputFormat: process.env.FAL_OUTPUT_FORMAT || 'jpeg',
+};
 
 const MIME = {
   '.html': 'text/html; charset=utf-8',
@@ -28,7 +38,7 @@ const MIME = {
 
 const server = http.createServer(async (req, res) => {
   if (req.url === '/api/integrate' && req.method === 'POST') {
-    return handleIntegrateRequest(req, res, { apiKey, model });
+    return handleIntegrateRequest(req, res, { apiKey, model, options });
   }
 
   // Fichiers statiques (avec repli SPA vers index.html).

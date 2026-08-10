@@ -74,7 +74,7 @@ function shoot() {
 async function integrate() {
   const frame = captureCanvas._frame;
   if (!frame) return;
-  showLoader('Intégration en cours… (nanoBanana Pro)');
+  showLoader('Intégration en cours… (GPT Image 2)');
   try {
     const personDataUrl = toScaledDataURL(frame, 1024, 0.92);
     const editedDataUrl = await integrateIntoScene({
