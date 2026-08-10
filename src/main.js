@@ -14,6 +14,7 @@ const loader = $('loader');
 const state = {
   originalSceneDataUrl: null, // panorama d'origine (pour "réinitialiser")
   sceneDataUrl: null, // panorama courant envoyé au modèle
+  captureSource: 'webcam', // 'webcam' | 'import'
 };
 
 // ---- Scène 360 ------------------------------------------------------------
@@ -39,14 +40,21 @@ function hideLoader() {
 }
 function setCaptureState(mode) {
   const live = mode === 'live';
+  const imported = state.captureSource === 'import';
   $('shoot-btn').classList.toggle('hidden', !live);
   video.classList.toggle('hidden', !live);
   captureCanvas.classList.toggle('hidden', live);
-  $('retake-btn').classList.toggle('hidden', live);
+  // En import, l'aperçu ne doit pas être mis en miroir (contrairement au selfie).
+  captureCanvas.classList.toggle('no-mirror', imported);
   $('place-btn').classList.toggle('hidden', live);
+
+  const retake = $('retake-btn');
+  retake.classList.toggle('hidden', live);
+  retake.textContent = imported ? '🖼️ Autre image' : '↺ Reprendre';
 }
 
 async function openCapture() {
+  state.captureSource = 'webcam';
   capturePanel.classList.remove('hidden');
   setCaptureState('live');
   try {
@@ -61,7 +69,7 @@ function closeCapture() {
   capturePanel.classList.add('hidden');
 }
 
-// Fige la photo dans l'aperçu.
+// Fige la photo webcam dans l'aperçu.
 function shoot() {
   const frame = webcam.grabFrame();
   captureCanvas.width = frame.width;
@@ -69,6 +77,36 @@ function shoot() {
   captureCanvas.getContext('2d').drawImage(frame, 0, 0);
   captureCanvas._frame = frame;
   setCaptureState('preview');
+}
+
+// Importe une image de visage (pour tests) : elle remplace la photo webcam.
+async function importFace(file) {
+  if (!file) return;
+  try {
+    const img = await new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(file);
+      const image = new Image();
+      image.onload = () => {
+        URL.revokeObjectURL(url);
+        resolve(image);
+      };
+      image.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error('Image invalide.'));
+      };
+      image.src = url;
+    });
+    state.captureSource = 'import';
+    webcam.stop(); // au cas où la webcam tournait
+    captureCanvas.width = img.naturalWidth;
+    captureCanvas.height = img.naturalHeight;
+    captureCanvas.getContext('2d').drawImage(img, 0, 0);
+    captureCanvas._frame = img;
+    capturePanel.classList.remove('hidden');
+    setCaptureState('preview');
+  } catch (err) {
+    alert(err.message);
+  }
 }
 
 // Envoie la photo + le panorama courant à nanoBanana Pro, puis remplace la scène.
@@ -140,8 +178,16 @@ async function resetScene() {
 $('open-capture').addEventListener('click', openCapture);
 $('capture-cancel').addEventListener('click', closeCapture);
 $('shoot-btn').addEventListener('click', shoot);
-$('retake-btn').addEventListener('click', () => setCaptureState('live'));
+$('retake-btn').addEventListener('click', () => {
+  // En import : rechoisir un fichier ; en webcam : revenir au flux live.
+  if (state.captureSource === 'import') $('face-input').click();
+  else setCaptureState('live');
+});
 $('place-btn').addEventListener('click', integrate);
+$('face-input').addEventListener('change', (e) => {
+  importFace(e.target.files[0]);
+  e.target.value = ''; // permet de réimporter le même fichier
+});
 $('reset-btn').addEventListener('click', resetScene);
 $('pano-input').addEventListener('change', (e) => loadPanoramaFile(e.target.files[0]));
 
