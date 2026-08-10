@@ -11,10 +11,12 @@ const captureCanvas = $('capture-canvas');
 const loader = $('loader');
 
 // ---- État -----------------------------------------------------------------
+const MAX_PEOPLE = 15; // gpt-image-2/edit : 16 images max (scène + 15 personnes)
 const state = {
   originalSceneDataUrl: null, // panorama d'origine (pour "réinitialiser")
   sceneDataUrl: null, // panorama courant envoyé au modèle
   captureSource: 'webcam', // 'webcam' | 'import'
+  people: [], // data URLs des visages à intégrer (références gpt-image-2)
 };
 
 // ---- Scène 360 ------------------------------------------------------------
@@ -46,7 +48,7 @@ function setCaptureState(mode) {
   captureCanvas.classList.toggle('hidden', live);
   // En import, l'aperçu ne doit pas être mis en miroir (contrairement au selfie).
   captureCanvas.classList.toggle('no-mirror', imported);
-  $('place-btn').classList.toggle('hidden', live);
+  $('add-btn').classList.toggle('hidden', live);
 
   const retake = $('retake-btn');
   retake.classList.toggle('hidden', live);
@@ -109,21 +111,69 @@ async function importFace(file) {
   }
 }
 
-// Envoie la photo + le panorama courant à nanoBanana Pro, puis remplace la scène.
-async function integrate() {
+// Ajoute la personne de l'aperçu à la liste des personnes à intégrer.
+function addCurrentPerson() {
   const frame = captureCanvas._frame;
   if (!frame) return;
-  showLoader('Intégration en cours… (GPT Image 2)');
+  if (state.people.length >= MAX_PEOPLE) {
+    alert(`Maximum ${MAX_PEOPLE} personnes par intégration.`);
+    return;
+  }
+  state.people.push(toScaledDataURL(frame, 1536, 0.92));
+  renderRoster();
+
+  if (state.captureSource === 'webcam') {
+    // Retour au direct pour enchaîner la personne suivante.
+    setCaptureState('live');
+  } else {
+    closeCapture();
+  }
+}
+
+// Rend la bande de miniatures + met à jour le bouton d'intégration.
+function renderRoster() {
+  const roster = $('roster');
+  const list = $('roster-list');
+  list.innerHTML = '';
+  state.people.forEach((dataUrl, i) => {
+    const item = document.createElement('div');
+    item.className = 'roster-item';
+    const img = document.createElement('img');
+    img.src = dataUrl;
+    img.alt = `Personne ${i + 1}`;
+    const del = document.createElement('button');
+    del.className = 'roster-del';
+    del.title = 'Retirer';
+    del.textContent = '×';
+    del.addEventListener('click', () => {
+      state.people.splice(i, 1);
+      renderRoster();
+    });
+    item.append(img, del);
+    list.append(item);
+  });
+
+  const count = state.people.length;
+  roster.classList.toggle('hidden', count === 0);
+  const btn = $('integrate-btn');
+  btn.disabled = count === 0;
+  btn.textContent = count === 0 ? '✨ Intégrer' : `✨ Intégrer (${count})`;
+}
+
+// Envoie la scène + toutes les personnes de la liste à GPT Image 2.
+async function integrateAll() {
+  if (state.people.length === 0) return;
+  showLoader(`Intégration de ${state.people.length} personne(s)… (GPT Image 2)`);
   try {
-    const personDataUrl = toScaledDataURL(frame, 1536, 0.92);
     const editedDataUrl = await integrateIntoScene({
-      personDataUrl,
+      personDataUrls: state.people,
       sceneDataUrl: state.sceneDataUrl,
     });
     await applySceneImage(editedDataUrl);
-    // Les intégrations suivantes s'ajoutent à la scène déjà peuplée.
+    // La scène éditée devient la nouvelle base ; on vide la liste.
     state.sceneDataUrl = editedDataUrl;
-    closeCapture();
+    state.people = [];
+    renderRoster();
   } catch (err) {
     console.error(err);
     alert("L'intégration a échoué : " + err.message);
@@ -183,7 +233,8 @@ $('retake-btn').addEventListener('click', () => {
   if (state.captureSource === 'import') $('face-input').click();
   else setCaptureState('live');
 });
-$('place-btn').addEventListener('click', integrate);
+$('add-btn').addEventListener('click', addCurrentPerson);
+$('integrate-btn').addEventListener('click', integrateAll);
 $('face-input').addEventListener('change', (e) => {
   importFace(e.target.files[0]);
   e.target.value = ''; // permet de réimporter le même fichier
@@ -201,3 +252,5 @@ panorama.onUserInteract = () => {
   autotourBtn.setAttribute('aria-pressed', 'false');
   autotourBtn.textContent = '▶ Tour auto';
 };
+
+renderRoster(); // état initial (liste vide, bouton désactivé)

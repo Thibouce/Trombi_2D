@@ -26,18 +26,18 @@ export function parseImageSize(value) {
 }
 
 const DEFAULT_PROMPT = `Tu édites une image panoramique équirectangulaire 360° (ratio 2:1) d'un lieu de bureau.
-Première image : la scène équirectangulaire (les locaux).
-Deuxième image : la photo d'une personne (visage / tête).
+La PREMIÈRE image est la scène équirectangulaire (les locaux).
+Les images SUIVANTES sont des personnes différentes (une personne par image).
 
-Objectif : intègre cette personne dans la scène de façon réaliste, comme si elle
-se tenait naturellement debout dans ces locaux. Respecte impérativement :
+Objectif : intègre CHACUNE de ces personnes dans la scène de façon réaliste,
+comme si elles se tenaient naturellement debout dans ces locaux. Respecte impérativement :
 - la projection ÉQUIRECTANGULAIRE 360° et le ratio 2:1 de l'image de sortie ;
 - l'échelle humaine (taille réaliste, pieds au niveau du sol) ;
 - la perspective, l'éclairage, la balance des couleurs et les ombres portées de la scène ;
-- le reste de la scène doit rester INCHANGÉ (n'ajoute rien d'autre).
+- répartis les personnes dans des zones dégagées, sans qu'elles se chevauchent ;
+- le reste du décor doit rester INCHANGÉ (n'ajoute rien d'autre que ces personnes).
 
-Place la personne dans une zone dégagée au sol, bien visible. Rends une seule
-image équirectangulaire finale.`;
+Rends une seule image équirectangulaire finale contenant toutes les personnes.`;
 
 // Récupère l'image générée (URL fal.media) et la renvoie en data URL, pour que
 // le client reçoive une image same-origin (pas de souci CORS pour la texture).
@@ -53,7 +53,8 @@ async function fetchAsDataUrl(url) {
 export async function integrate({
   apiKey,
   model = DEFAULT_MODEL,
-  personDataUrl,
+  personDataUrl, // rétrocompat : une seule personne
+  personDataUrls, // plusieurs personnes (références supplémentaires)
   sceneDataUrl,
   prompt = DEFAULT_PROMPT,
   imageSize = DEFAULT_IMAGE_SIZE,
@@ -67,16 +68,24 @@ export async function integrate({
     err.status = 500;
     throw err;
   }
-  if (!sceneDataUrl || !personDataUrl) {
-    const err = new Error('Images manquantes (scène et/ou personne).');
+
+  const persons = (personDataUrls?.length ? personDataUrls : [personDataUrl]).filter(Boolean);
+  if (!sceneDataUrl || persons.length === 0) {
+    const err = new Error('Images manquantes (scène et/ou au moins une personne).');
+    err.status = 400;
+    throw err;
+  }
+  // gpt-image-2/edit accepte au maximum 16 images d'entrée (scène incluse).
+  if (persons.length > 15) {
+    const err = new Error('Trop de personnes (maximum 15 par intégration).');
     err.status = 400;
     throw err;
   }
 
   const body = {
     prompt,
-    // Ordre attendu par le prompt : [scène, personne].
-    image_urls: [sceneDataUrl, personDataUrl],
+    // Ordre attendu par le prompt : [scène, personne1, personne2, ...].
+    image_urls: [sceneDataUrl, ...persons],
     num_images: 1,
   };
   // N.B. : ne PAS envoyer input_fidelity — gpt-image-2 le refuse (toujours haute fidélité).
@@ -146,6 +155,7 @@ export async function handleIntegrateRequest(req, res, { apiKey, model, options 
       apiKey,
       model,
       personDataUrl: payload.personDataUrl,
+      personDataUrls: payload.personDataUrls,
       sceneDataUrl: payload.sceneDataUrl,
       prompt: payload.prompt,
       imageSize: payload.imageSize ?? options.imageSize,

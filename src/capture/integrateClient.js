@@ -15,13 +15,13 @@ export function toScaledDataURL(source, maxWidth, quality = 0.92) {
   return canvas.toDataURL('image/jpeg', quality);
 }
 
-// Envoie la photo de la personne + le panorama au serveur, renvoie la data URL
-// du panorama édité.
-export async function integrateIntoScene({ personDataUrl, sceneDataUrl }) {
+// Envoie une ou plusieurs personnes (références) + le panorama au serveur,
+// renvoie la data URL du panorama édité.
+export async function integrateIntoScene({ personDataUrls, sceneDataUrl }) {
   const res = await fetch('/api/integrate', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ personDataUrl, sceneDataUrl }),
+    body: JSON.stringify({ personDataUrls, sceneDataUrl }),
   });
   const json = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(json.error || `Erreur serveur (${res.status})`);

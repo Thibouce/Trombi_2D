@@ -27,10 +27,16 @@
         <div class="capture-actions">
           <button id="shoot-btn" class="btn btn-primary">📸 Prendre la photo</button>
           <button id="retake-btn" class="btn hidden">↺ Reprendre</button>
-          <button id="place-btn" class="btn btn-primary hidden">✨ M'intégrer dans la scène</button>
-          <button id="capture-cancel" class="btn btn-ghost">Annuler</button>
+          <button id="add-btn" class="btn btn-primary hidden">➕ Ajouter à la liste</button>
+          <button id="capture-cancel" class="btn btn-ghost">Fermer</button>
         </div>
-        <p class="hint">Cadre bien ta tête dans l'ovale, souris 🙂 — l'IA t'intègre ensuite dans les locaux.</p>
+        <p class="hint">Ajoute autant de personnes que tu veux, puis clique sur « ✨ Intégrer » 🙂</p>
+      </section>
+
+      <!-- Liste des personnes à intégrer (miniatures) -->
+      <section id="roster" class="roster hidden">
+        <span class="roster-label">Personnes à intégrer</span>
+        <div id="roster-list" class="roster-list"></div>
       </section>
 
       <!-- Barre d'actions principale -->
@@ -40,6 +46,7 @@
           🖼️ Importer un visage
           <input id="face-input" type="file" accept="image/*" hidden />
         </label>
+        <button id="integrate-btn" class="btn btn-primary" disabled>✨ Intégrer</button>
         <label class="btn btn-ghost" title="Charger ta propre photo 360° équirectangulaire">
           🌐 Charger un panorama
           <input id="pano-input" type="file" accept="image/*" hidden />

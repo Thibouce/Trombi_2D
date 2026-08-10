@@ -7,13 +7,16 @@ borne d'accueil, un salon ou un mur d'écran.
 
 ## ✨ Fonctionnement
 
-1. **Capture** — l'utilisateur se prend en photo (webcam, cadrage guidé par un ovale).
-2. **Intégration IA** — la photo + le panorama équirectangulaire sont envoyés à
-   **GPT Image 2** (via **fal.ai**) au travers d'un **proxy serveur**. Le modèle
-   fond la personne dans la scène (échelle, perspective, éclairage, ombres) et
-   renvoie un nouveau panorama équirectangulaire. La taille de sortie est forcée
-   en **3840×1920 (4K, 2:1)** via `FAL_IMAGE_SIZE` pour préserver la projection
-   équirectangulaire à la résolution maximale.
+1. **Capture** — chaque personne se prend en photo (webcam) ou importe une image ;
+   chaque visage s'**ajoute à une liste** (miniatures). Jusqu'à **15 personnes**
+   par intégration.
+2. **Intégration IA** — le panorama + **tous les visages de la liste** (une
+   référence par personne) sont envoyés à **GPT Image 2** (via **fal.ai**) au
+   travers d'un **proxy serveur**, en un seul appel : `image_urls = [scène,
+   visage1, visage2, …]`. Le modèle place chaque personne dans la scène (échelle,
+   perspective, éclairage, ombres) et renvoie un nouveau panorama. La taille de
+   sortie est forcée en **3840×1920 (4K, 2:1)** via `FAL_IMAGE_SIZE` pour
+   préserver la projection équirectangulaire à la résolution maximale.
 3. **Immersion** — le panorama édité remplace la scène ; la caméra pivote en
    « tour auto » ou l'utilisateur regarde autour (glisser / molette pour zoomer).
 
