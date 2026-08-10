@@ -10,10 +10,10 @@
 const FAL_RUN = 'https://fal.run';
 export const DEFAULT_MODEL = 'openai/gpt-image-2/edit';
 
-// Taille de sortie par défaut : 2:1 explicite pour préserver l'équirectangulaire.
-// gpt-image-2/edit accepte soit un objet {width,height}, soit un enum
-// (ex. "landscape_16_9", "square_hd", "auto"). Surchargeable via FAL_IMAGE_SIZE.
-export const DEFAULT_IMAGE_SIZE = { width: 1536, height: 768 };
+// Taille de sortie par défaut : 3840×1920 (4K, ratio 2:1) — résolution maximale
+// pour préserver l'équirectangulaire. gpt-image-2/edit accepte soit un objet
+// {width,height}, soit un enum (ex. "landscape_16_9"). Surchargeable via FAL_IMAGE_SIZE.
+export const DEFAULT_IMAGE_SIZE = { width: 3840, height: 1920 };
 
 // Convertit une valeur d'env en image_size : "1536x768" -> {width,height},
 // sinon renvoie la chaîne telle quelle (enum), ou undefined si vide.

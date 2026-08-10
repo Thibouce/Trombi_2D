@@ -21,8 +21,9 @@ const panorama = new Panorama($('scene'));
 const demo = createDemoPanorama();
 panorama.setPanoramaTexture(demo);
 panorama.start();
-// La démo sert de scène de base par défaut.
-state.originalSceneDataUrl = toScaledDataURL(demo, 2048, 0.9);
+// La démo sert de scène de base par défaut. On la garde en haute résolution
+// (jusqu'à 3840 de large) pour alimenter la sortie 4K sans upscale.
+state.originalSceneDataUrl = toScaledDataURL(demo, 3840, 0.92);
 state.sceneDataUrl = state.originalSceneDataUrl;
 
 // ---- Webcam ---------------------------------------------------------------
@@ -76,7 +77,7 @@ async function integrate() {
   if (!frame) return;
   showLoader('Intégration en cours… (GPT Image 2)');
   try {
-    const personDataUrl = toScaledDataURL(frame, 1024, 0.92);
+    const personDataUrl = toScaledDataURL(frame, 1536, 0.92);
     const editedDataUrl = await integrateIntoScene({
       personDataUrl,
       sceneDataUrl: state.sceneDataUrl,
@@ -121,7 +122,7 @@ async function loadPanoramaFile(file) {
     const img = new Image();
     img.src = dataUrl;
     await img.decode();
-    state.originalSceneDataUrl = toScaledDataURL(img, 2048, 0.9);
+    state.originalSceneDataUrl = toScaledDataURL(img, 3840, 0.92);
     state.sceneDataUrl = state.originalSceneDataUrl;
   } catch (err) {
     alert('Image invalide : ' + err.message);

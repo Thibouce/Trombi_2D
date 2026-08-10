@@ -12,7 +12,8 @@ borne d'accueil, un salon ou un mur d'écran.
    **GPT Image 2** (via **fal.ai**) au travers d'un **proxy serveur**. Le modèle
    fond la personne dans la scène (échelle, perspective, éclairage, ombres) et
    renvoie un nouveau panorama équirectangulaire. La taille de sortie est forcée
-   en **2:1** (`FAL_IMAGE_SIZE`) pour préserver la projection équirectangulaire.
+   en **3840×1920 (4K, 2:1)** via `FAL_IMAGE_SIZE` pour préserver la projection
+   équirectangulaire à la résolution maximale.
 3. **Immersion** — le panorama édité remplace la scène ; la caméra pivote en
    « tour auto » ou l'utilisateur regarde autour (glisser / molette pour zoomer).
 
@@ -47,7 +48,7 @@ npm start                 # node --env-file=.env server.js  → http://localhost
    ```env
    FAL_KEY=ta_cle_fal
    FAL_MODEL=openai/gpt-image-2/edit   # défaut
-   FAL_IMAGE_SIZE=1536x768             # 2:1 pour l'équirectangulaire
+   FAL_IMAGE_SIZE=3840x1920            # 4K, 2:1 pour l'équirectangulaire
    ```
 
 Le serveur appelle l'endpoint synchrone `https://fal.run/<FAL_MODEL>` avec les
