@@ -7,16 +7,20 @@ borne d'accueil, un salon ou un mur d'écran.
 
 ## ✨ Fonctionnement
 
-1. **Capture** — chaque personne se prend en photo (webcam) ou importe une image ;
-   chaque visage s'**ajoute à une liste** (miniatures). Jusqu'à **15 personnes**
-   par intégration.
-2. **Intégration IA** — le panorama + **tous les visages de la liste** (une
-   référence par personne) sont envoyés à **GPT Image 2** (via **fal.ai**) au
-   travers d'un **proxy serveur**, en un seul appel : `image_urls = [scène,
-   visage1, visage2, …]`. Le modèle place chaque personne dans la scène (échelle,
-   perspective, éclairage, ombres) et renvoie un nouveau panorama. La taille de
-   sortie est forcée en **3840×1920 (4K, 2:1)** via `FAL_IMAGE_SIZE` pour
-   préserver la projection équirectangulaire à la résolution maximale.
+Deux modes d'intégration, au choix via le bouton **👤 Solo / 👥 Groupé** :
+
+- **Solo** (défaut) — une personne se prend en photo (ou importe une image) et est
+  **intégrée immédiatement** dans la scène. Répéter pour ajouter d'autres personnes
+  (chaque appel s'appuie sur la scène déjà éditée).
+- **Groupé** — chaque visage s'**ajoute à une liste** (miniatures, jusqu'à **15**),
+  puis **« ✨ Intégrer (N) »** envoie tout en **un seul appel** :
+  `image_urls = [scène, visage1, visage2, …]` (une référence par personne).
+
+Dans les deux cas, le panorama + le(s) visage(s) sont envoyés à **GPT Image 2**
+(via **fal.ai**) au travers d'un **proxy serveur**. Le modèle place chaque personne
+(échelle, perspective, éclairage, ombres) et renvoie un nouveau panorama. La taille
+de sortie est forcée en **3840×1920 (4K, 2:1)** via `FAL_IMAGE_SIZE` pour préserver
+la projection équirectangulaire à la résolution maximale.
 3. **Immersion** — le panorama édité remplace la scène ; la caméra pivote en
    « tour auto » ou l'utilisateur regarde autour (glisser / molette pour zoomer).
 

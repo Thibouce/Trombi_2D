@@ -16,6 +16,7 @@ const state = {
   originalSceneDataUrl: null, // panorama d'origine (pour "réinitialiser")
   sceneDataUrl: null, // panorama courant envoyé au modèle
   captureSource: 'webcam', // 'webcam' | 'import'
+  mode: 'solo', // 'solo' (1 personne, immédiat) | 'group' (liste multi-références)
   people: [], // data URLs des visages à intégrer (références gpt-image-2)
 };
 
@@ -48,11 +49,28 @@ function setCaptureState(mode) {
   captureCanvas.classList.toggle('hidden', live);
   // En import, l'aperçu ne doit pas être mis en miroir (contrairement au selfie).
   captureCanvas.classList.toggle('no-mirror', imported);
-  $('add-btn').classList.toggle('hidden', live);
+
+  const addBtn = $('add-btn');
+  addBtn.classList.toggle('hidden', live);
+  addBtn.textContent = state.mode === 'solo' ? '✨ Intégrer' : '➕ Ajouter à la liste';
 
   const retake = $('retake-btn');
   retake.classList.toggle('hidden', live);
   retake.textContent = imported ? '🖼️ Autre image' : '↺ Reprendre';
+}
+
+// Applique le mode courant à l'interface (sélecteur + liste + libellés).
+function applyMode() {
+  const solo = state.mode === 'solo';
+  const modeBtn = $('mode-btn');
+  modeBtn.textContent = solo ? '👤 Solo' : '👥 Groupé';
+  modeBtn.title = solo
+    ? "Mode Solo : intégration immédiate d'une personne"
+    : 'Mode Groupé : constituer une liste puis intégrer en un seul appel';
+  // La liste et l'intégration groupée n'existent qu'en mode Groupé.
+  $('integrate-btn').classList.toggle('hidden', solo);
+  if (solo) $('roster').classList.add('hidden');
+  else renderRoster();
 }
 
 async function openCapture() {
@@ -111,7 +129,23 @@ async function importFace(file) {
   }
 }
 
-// Ajoute la personne de l'aperçu à la liste des personnes à intégrer.
+// Action principale de l'aperçu : selon le mode, intègre tout de suite (solo)
+// ou ajoute la personne à la liste (groupé).
+function onPreviewPrimary() {
+  if (state.mode === 'solo') integrateSolo();
+  else addCurrentPerson();
+}
+
+// Mode Solo : intègre immédiatement la personne de l'aperçu dans la scène.
+async function integrateSolo() {
+  const frame = captureCanvas._frame;
+  if (!frame) return;
+  const personDataUrl = toScaledDataURL(frame, 1536, 0.92);
+  const ok = await runIntegration([personDataUrl], 'Intégration en cours… (GPT Image 2)');
+  if (ok) closeCapture();
+}
+
+// Mode Groupé : ajoute la personne de l'aperçu à la liste.
 function addCurrentPerson() {
   const frame = captureCanvas._frame;
   if (!frame) return;
@@ -127,6 +161,26 @@ function addCurrentPerson() {
     setCaptureState('live');
   } else {
     closeCapture();
+  }
+}
+
+// Envoie la scène + les personnes à GPT Image 2 et applique le résultat.
+async function runIntegration(personDataUrls, loaderText) {
+  showLoader(loaderText);
+  try {
+    const editedDataUrl = await integrateIntoScene({
+      personDataUrls,
+      sceneDataUrl: state.sceneDataUrl,
+    });
+    await applySceneImage(editedDataUrl);
+    state.sceneDataUrl = editedDataUrl; // la scène éditée devient la nouvelle base
+    return true;
+  } catch (err) {
+    console.error(err);
+    alert("L'intégration a échoué : " + err.message);
+    return false;
+  } finally {
+    hideLoader();
   }
 }
 
@@ -160,25 +214,16 @@ function renderRoster() {
   btn.textContent = count === 0 ? '✨ Intégrer' : `✨ Intégrer (${count})`;
 }
 
-// Envoie la scène + toutes les personnes de la liste à GPT Image 2.
+// Mode Groupé : envoie la scène + toutes les personnes de la liste, en un appel.
 async function integrateAll() {
   if (state.people.length === 0) return;
-  showLoader(`Intégration de ${state.people.length} personne(s)… (GPT Image 2)`);
-  try {
-    const editedDataUrl = await integrateIntoScene({
-      personDataUrls: state.people,
-      sceneDataUrl: state.sceneDataUrl,
-    });
-    await applySceneImage(editedDataUrl);
-    // La scène éditée devient la nouvelle base ; on vide la liste.
-    state.sceneDataUrl = editedDataUrl;
-    state.people = [];
+  const ok = await runIntegration(
+    state.people,
+    `Intégration de ${state.people.length} personne(s)… (GPT Image 2)`
+  );
+  if (ok) {
+    state.people = []; // la liste est maintenant dans la scène
     renderRoster();
-  } catch (err) {
-    console.error(err);
-    alert("L'intégration a échoué : " + err.message);
-  } finally {
-    hideLoader();
   }
 }
 
@@ -233,8 +278,12 @@ $('retake-btn').addEventListener('click', () => {
   if (state.captureSource === 'import') $('face-input').click();
   else setCaptureState('live');
 });
-$('add-btn').addEventListener('click', addCurrentPerson);
+$('add-btn').addEventListener('click', onPreviewPrimary);
 $('integrate-btn').addEventListener('click', integrateAll);
+$('mode-btn').addEventListener('click', () => {
+  state.mode = state.mode === 'solo' ? 'group' : 'solo';
+  applyMode();
+});
 $('face-input').addEventListener('change', (e) => {
   importFace(e.target.files[0]);
   e.target.value = ''; // permet de réimporter le même fichier
@@ -253,4 +302,5 @@ panorama.onUserInteract = () => {
   autotourBtn.textContent = '▶ Tour auto';
 };
 
-renderRoster(); // état initial (liste vide, bouton désactivé)
+applyMode(); // état initial du mode (Solo par défaut)
+renderRoster(); // état initial de la liste (vide)
