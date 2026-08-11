@@ -7,14 +7,14 @@ borne d'accueil, un salon ou un mur d'écran.
 
 ## ✨ Fonctionnement
 
-Deux modes d'intégration, au choix via le bouton **👤 Solo / 👥 Groupé** :
+Le projet expose **deux versions** (deux pages, même code) :
 
-- **Solo** (défaut) — une personne se prend en photo (ou importe une image) et est
-  **intégrée immédiatement** dans la scène. Répéter pour ajouter d'autres personnes
-  (chaque appel s'appuie sur la scène déjà éditée).
-- **Groupé** — chaque visage s'**ajoute à une liste** (miniatures, jusqu'à **15**),
-  puis **« ✨ Intégrer (N) »** envoie tout en **un seul appel** :
-  `image_urls = [scène, visage1, visage2, …]` (une référence par personne).
+| Version | Page | Comportement |
+|---------|------|--------------|
+| **1 personnage** | `/` (`index.html`) | Une personne se prend en photo (ou importe une image) et est **intégrée immédiatement**. Répéter pour peupler la scène (chaque appel repart de la scène éditée). |
+| **2 personnages** | `/duo.html` | On ajoute **jusqu'à 2 visages** à une liste, puis **« ✨ Intégrer »** envoie tout en **un seul appel** : `image_urls = [scène, visage1, visage2]`. |
+
+Un lien en haut de page permet de passer d'une version à l'autre.
 
 Dans les deux cas, le panorama + le(s) visage(s) sont envoyés à **GPT Image 2**
 (via **fal.ai**) au travers d'un **proxy serveur**. Le modèle place chaque personne
@@ -77,11 +77,14 @@ personne). Les intégrations successives s'ajoutent à la scène courante.
 ## 🗂️ Structure
 
 ```
-index.html
+index.html                # version 1 personnage  -> charge src/solo.js
+duo.html                  # version 2 personnages -> charge src/duo.js
 server.js                 # serveur de production (statique + /api/integrate)
-vite.config.js            # branche le proxy API en dev, charge .env
+vite.config.js            # 2 points d'entrée, proxy API en dev, charge .env
 src/
-  main.js                 # orchestration + UI
+  app.js                  # logique + UI, paramétrée par maxPeople
+  solo.js                 # entrée version 1 personnage  (initApp maxPeople:1)
+  duo.js                  # entrée version 2 personnages (initApp maxPeople:2)
   styles.css
   scene/
     Panorama.js           # visionneuse 360 (sphère, caméra panoramique)

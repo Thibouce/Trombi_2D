@@ -56,6 +56,20 @@ html, body {
   color: transparent;
 }
 .subtitle { margin: 4px 0 0; opacity: 0.75; font-size: 0.9rem; }
+.subtitle a { color: var(--accent); text-decoration: none; }
+.subtitle a:hover { text-decoration: underline; }
+.badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  vertical-align: middle;
+  padding: 3px 9px;
+  margin-left: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border);
+  -webkit-text-fill-color: var(--fg);
+  color: var(--fg);
+}
 
 /* Barre du bas */
 .bottombar {

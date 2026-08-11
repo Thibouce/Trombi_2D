@@ -3,18 +3,18 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Trombi 2D — Un personnage</title>
+    <title>Trombi 2D — Deux personnages</title>
     <link rel="stylesheet" href="/src/styles.css" />
   </head>
   <body>
-    <!-- Scène 3D (panorama 360 + personne intégrée) -->
+    <!-- Scène 3D (panorama 360 + personnes intégrées) -->
     <canvas id="scene"></canvas>
 
     <!-- Interface superposée -->
     <div id="ui">
       <header class="topbar">
-        <h1>Trombi&nbsp;2D <span class="badge">1 personnage</span></h1>
-        <p class="subtitle">Prends-toi en photo, entre dans nos locaux. · <a href="/duo.html">version 2 personnages →</a></p>
+        <h1>Trombi&nbsp;2D <span class="badge">2 personnages</span></h1>
+        <p class="subtitle">Ajoutez deux visages, entrez ensemble dans nos locaux. · <a href="/index.html">version 1 personnage →</a></p>
       </header>
 
       <!-- Panneau de capture webcam -->
@@ -27,13 +27,13 @@
         <div class="capture-actions">
           <button id="shoot-btn" class="btn btn-primary">📸 Prendre la photo</button>
           <button id="retake-btn" class="btn hidden">↺ Reprendre</button>
-          <button id="add-btn" class="btn btn-primary hidden">✨ Intégrer</button>
+          <button id="add-btn" class="btn btn-primary hidden">➕ Ajouter à la liste</button>
           <button id="capture-cancel" class="btn btn-ghost">Fermer</button>
         </div>
-        <p class="hint">Prends la photo (ou importe une image), puis « ✨ Intégrer » 🙂</p>
+        <p class="hint">Ajoute jusqu'à 2 visages, puis « ✨ Intégrer (N) » 🙂</p>
       </section>
 
-      <!-- Liste des personnes à intégrer (inutilisée en version 1 personnage) -->
+      <!-- Liste des personnes à intégrer (miniatures) -->
       <section id="roster" class="roster hidden">
         <span class="roster-label">Personnes à intégrer</span>
         <div id="roster-list" class="roster-list"></div>
@@ -46,7 +46,7 @@
           🖼️ Importer un visage
           <input id="face-input" type="file" accept="image/*" hidden />
         </label>
-        <button id="integrate-btn" class="btn btn-primary hidden" disabled>✨ Intégrer</button>
+        <button id="integrate-btn" class="btn btn-primary" disabled>✨ Intégrer</button>
         <label class="btn btn-ghost" title="Charger ta propre photo 360° équirectangulaire">
           🌐 Charger un panorama
           <input id="pano-input" type="file" accept="image/*" hidden />
@@ -58,6 +58,6 @@
 
     <div id="loader" class="loader hidden"><div class="spinner"></div><span></span></div>
 
-    <script type="module" src="/src/solo.js"></script>
+    <script type="module" src="/src/duo.js"></script>
   </body>
 </html>
