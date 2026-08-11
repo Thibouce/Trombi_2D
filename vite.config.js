@@ -18,15 +18,6 @@ export default defineConfig(({ mode }) => {
       }),
     ],
     server: { host: true, port: 5173 },
-    build: {
-      target: 'es2020',
-      rollupOptions: {
-        // Deux versions du projet, deux points d'entrée.
-        input: {
-          main: 'index.html', // version 1 personnage
-          duo: 'duo.html', // version 2 personnages
-        },
-      },
-    },
+    build: { target: 'es2020' },
   };
 });
