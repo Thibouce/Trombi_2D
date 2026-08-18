@@ -123,6 +123,7 @@ async function integrate() {
     await applySceneImage(editedDataUrl);
     // Les intégrations suivantes s'ajoutent à la scène déjà peuplée.
     state.sceneDataUrl = editedDataUrl;
+    setDownloadEnabled(true); // le résultat est téléchargeable
     closeCapture();
   } catch (err) {
     console.error(err);
@@ -172,6 +173,26 @@ async function loadPanoramaFile(file) {
 async function resetScene() {
   await applySceneImage(state.originalSceneDataUrl);
   state.sceneDataUrl = state.originalSceneDataUrl;
+  setDownloadEnabled(false); // plus de résultat à télécharger
+}
+
+// Active/désactive le bouton de téléchargement.
+function setDownloadEnabled(on) {
+  $('download-btn').disabled = !on;
+}
+
+// Télécharge le panorama courant (résultat de l'intégration).
+function downloadResult() {
+  const url = state.sceneDataUrl;
+  if (!url) return;
+  const mime = (url.match(/^data:([^;]+)/) || [])[1] || 'image/jpeg';
+  const ext = mime.includes('png') ? 'png' : mime.includes('webp') ? 'webp' : 'jpg';
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `trombi-360-${Date.now()}.${ext}`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
 }
 
 // ---- Événements -----------------------------------------------------------
@@ -189,6 +210,7 @@ $('face-input').addEventListener('change', (e) => {
   e.target.value = ''; // permet de réimporter le même fichier
 });
 $('reset-btn').addEventListener('click', resetScene);
+$('download-btn').addEventListener('click', downloadResult);
 $('pano-input').addEventListener('change', (e) => loadPanoramaFile(e.target.files[0]));
 
 const autotourBtn = $('autotour-btn');

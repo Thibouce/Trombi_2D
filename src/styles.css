@@ -93,6 +93,7 @@ html, body {
 .btn-primary:hover { background: linear-gradient(90deg, #6f9bff, #8f72ff); }
 .btn-ghost { background: rgba(255, 255, 255, 0.04); }
 .btn[aria-pressed="false"] { opacity: 0.55; }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
 
 /* Panneau de capture */
 .panel {
