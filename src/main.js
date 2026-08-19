@@ -2,6 +2,7 @@ import { Panorama } from './scene/Panorama.js';
 import { createDemoPanorama } from './scene/demoPanorama.js';
 import { Webcam } from './capture/Webcam.js';
 import { toScaledDataURL, integrateIntoScene } from './capture/integrateClient.js';
+import { STYLES } from './panoramas.js';
 
 // ---- DOM ------------------------------------------------------------------
 const $ = (id) => document.getElementById(id);
@@ -146,25 +147,61 @@ function applySceneImage(url) {
   });
 }
 
-// Charge un panorama équirectangulaire fourni par l'utilisateur.
-async function loadPanoramaFile(file) {
-  if (!file) return;
-  showLoader('Chargement du panorama…');
-  try {
-    const dataUrl = await new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-    await applySceneImage(dataUrl);
+// Charge une image (par URL) et renvoie l'élément Image décodé.
+function loadImageEl(url) {
+  return new Promise((resolve, reject) => {
     const img = new Image();
-    img.src = dataUrl;
-    await img.decode();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error('chargement impossible'));
+    img.src = url;
+  });
+}
+
+// Construit le sélecteur de décors à partir de la config STYLES.
+function buildStylePicker() {
+  const picker = $('style-picker');
+  STYLES.forEach((style) => {
+    const btn = document.createElement('button');
+    btn.className = 'style-thumb';
+    btn.dataset.id = style.id;
+    btn.title = `Se projeter — ${style.label}`;
+
+    const img = document.createElement('img');
+    img.src = style.thumb || style.src;
+    img.alt = style.label;
+    img.onerror = () => btn.classList.add('missing');
+
+    const label = document.createElement('span');
+    label.className = 'style-label';
+    label.textContent = style.label;
+
+    btn.append(img, label);
+    btn.addEventListener('click', () => selectStyle(style));
+    picker.append(btn);
+  });
+}
+
+function setActiveStyle(id) {
+  document.querySelectorAll('#style-picker .style-thumb').forEach((b) => {
+    b.classList.toggle('active', b.dataset.id === id);
+  });
+}
+
+// Projette la scène dans le décor du style choisi.
+async function selectStyle(style) {
+  showLoader('Chargement du décor…');
+  try {
+    const img = await loadImageEl(style.src);
+    panorama.setPanoramaTexture(img);
     state.originalSceneDataUrl = toScaledDataURL(img, 3840, 0.92);
     state.sceneDataUrl = state.originalSceneDataUrl;
+    setDownloadEnabled(false); // nouveau décor -> plus de résultat en cours
+    setActiveStyle(style.id);
   } catch (err) {
-    alert('Image invalide : ' + err.message);
+    alert(
+      `Décor introuvable (${style.src}).\n` +
+        "Dépose l'image équirectangulaire dans public/panoramas/ (voir le README)."
+    );
   } finally {
     hideLoader();
   }
@@ -211,7 +248,8 @@ $('face-input').addEventListener('change', (e) => {
 });
 $('reset-btn').addEventListener('click', resetScene);
 $('download-btn').addEventListener('click', downloadResult);
-$('pano-input').addEventListener('change', (e) => loadPanoramaFile(e.target.files[0]));
+
+buildStylePicker(); // sélecteur de décors
 
 const autotourBtn = $('autotour-btn');
 autotourBtn.addEventListener('click', () => {

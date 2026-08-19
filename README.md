@@ -60,11 +60,15 @@ deux images (data URI) et récupère l'image éditée.
 ## 🖼️ Utiliser tes propres locaux
 
 Le projet démarre avec un **panorama de démonstration** généré à la volée.
-Bouton **« 🌐 Charger un panorama »** pour sélectionner une image
-**équirectangulaire** (projection 360°, ratio **2:1**, ex. 4096×2048), issue
-d'une caméra 360 (Insta360, Ricoh Theta…) ou d'un assemblage (Hugin / PTGui).
+Le **sélecteur de décors** (miniatures en haut à droite) permet de **se projeter
+dans un style** d'un simple clic :
 
-Le bouton **« ↺ Réinitialiser »** restaure le panorama d'origine (vide de toute
+1. Dépose tes images **équirectangulaires** (ratio **2:1**) dans
+   `public/panoramas/` (ex. `style-1.jpg`, `style-2.jpg`).
+2. Déclare-les dans **`src/panoramas.js`** (id, label, `src`, `thumb` optionnel).
+3. Clique la miniature du style voulu → la scène se recharge dans ce décor.
+
+Le bouton **« ↺ Réinitialiser »** restaure le décor courant (vide de toute
 personne). Les intégrations successives s'ajoutent à la scène courante.
 
 ## 🗂️ Structure
@@ -73,8 +77,11 @@ personne). Les intégrations successives s'ajoutent à la scène courante.
 index.html
 server.js                 # serveur de production (statique + /api/integrate)
 vite.config.js            # branche le proxy API en dev, charge .env
+public/
+  panoramas/              # tes décors 360 (style-1.jpg, style-2.jpg, …)
 src/
   main.js                 # orchestration + UI
+  panoramas.js            # liste des décors du sélecteur (styles)
   styles.css
   scene/
     Panorama.js           # visionneuse 360 (sphère, caméra panoramique)
