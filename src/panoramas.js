@@ -7,6 +7,6 @@
 //  - thumb : (optionnel) image affichée en miniature ; par défaut = src.
 //  - label : texte affiché sous la miniature.
 export const STYLES = [
-  { id: 'style-1', label: 'Style 1', src: '/panoramas/style-1.jpg' },
-  { id: 'style-2', label: 'Style 2', src: '/panoramas/style-2.jpg' },
+  { id: 'style-1', label: 'Style 1', src: '/panoramas/style-1.png' },
+  { id: 'style-2', label: 'Style 2', src: '/panoramas/style-2.png' },
 ];
