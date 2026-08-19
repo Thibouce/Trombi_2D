@@ -147,13 +147,31 @@ function applySceneImage(url) {
   });
 }
 
-// Charge une image (par URL) et renvoie l'élément Image décodé.
-function loadImageEl(url) {
+// Extensions testées quand la config ne précise pas l'extension.
+const IMAGE_EXTS = ['png', 'jpg', 'jpeg', 'webp', 'avif', 'gif'];
+const hasImageExt = (s) => /\.(png|jpe?g|webp|avif|gif|svg)$/i.test(s);
+
+// Résout une image à partir d'un chemin qui PEUT ne pas avoir d'extension :
+// on essaie les extensions courantes et on garde la première qui charge.
+// Renvoie { img, url } (élément Image décodé + URL réelle).
+function resolveImage(pathOrBase) {
+  const candidates = hasImageExt(pathOrBase)
+    ? [pathOrBase]
+    : IMAGE_EXTS.map((ext) => `${pathOrBase}.${ext}`);
   return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => resolve(img);
-    img.onerror = () => reject(new Error('chargement impossible'));
-    img.src = url;
+    let i = 0;
+    const tryNext = () => {
+      if (i >= candidates.length) {
+        reject(new Error('introuvable'));
+        return;
+      }
+      const url = candidates[i++];
+      const img = new Image();
+      img.onload = () => resolve({ img, url });
+      img.onerror = tryNext;
+      img.src = url;
+    };
+    tryNext();
   });
 }
 
@@ -167,9 +185,7 @@ function buildStylePicker() {
     btn.title = `Se projeter — ${style.label}`;
 
     const img = document.createElement('img');
-    img.src = style.thumb || style.src;
     img.alt = style.label;
-    img.onerror = () => btn.classList.add('missing');
 
     const label = document.createElement('span');
     label.className = 'style-label';
@@ -178,6 +194,13 @@ function buildStylePicker() {
     btn.append(img, label);
     btn.addEventListener('click', () => selectStyle(style));
     picker.append(btn);
+
+    // Résout l'extension de la miniature (thumb, sinon le panorama lui-même).
+    resolveImage(style.thumb || style.src)
+      .then(({ url }) => {
+        img.src = url;
+      })
+      .catch(() => btn.classList.add('missing'));
   });
 }
 
@@ -191,7 +214,7 @@ function setActiveStyle(id) {
 async function selectStyle(style) {
   showLoader('Chargement du décor…');
   try {
-    const img = await loadImageEl(style.src);
+    const { img } = await resolveImage(style.src);
     panorama.setPanoramaTexture(img);
     state.originalSceneDataUrl = toScaledDataURL(img, 3840, 0.92);
     state.sceneDataUrl = state.originalSceneDataUrl;
@@ -199,8 +222,8 @@ async function selectStyle(style) {
     setActiveStyle(style.id);
   } catch (err) {
     alert(
-      `Décor introuvable (${style.src}).\n` +
-        "Dépose l'image équirectangulaire dans public/panoramas/ (voir le README)."
+      `Décor introuvable (${style.src}.*).\n` +
+        "Dépose l'image équirectangulaire dans public/panoramas/ (png, jpg, webp…)."
     );
   } finally {
     hideLoader();

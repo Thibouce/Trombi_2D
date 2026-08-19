@@ -5,11 +5,14 @@ Dépose ici les images de tes styles. Elles sont servies à la racine du site
 
 Fichiers attendus par défaut (voir `src/panoramas.js`) :
 
-- `style-1.jpg` — panorama **équirectangulaire** (projection 360°, ratio **2:1**) du style 1
-- `style-2.jpg` — panorama **équirectangulaire** du style 2
+- `style-1.<ext>` — panorama **équirectangulaire** (projection 360°, ratio **2:1**) du style 1
+- `style-2.<ext>` — panorama **équirectangulaire** du style 2
 
-Formats acceptés : `.jpg`, `.png`, `.webp` (adapte les chemins dans
-`src/panoramas.js` si tu changes l'extension ou le nom).
+**L'extension est facultative dans la config** : `src/panoramas.js` référence
+`/panoramas/style-1` (sans extension) et l'app essaie automatiquement
+`png, jpg, jpeg, webp, avif, gif`, en gardant la première qui existe. Tu peux
+donc mélanger les formats d'un style à l'autre. Pour forcer une extension
+précise, indique-la (ex. `/panoramas/style-1.webp`).
 
 ## Miniatures (optionnel)
 
