@@ -98,7 +98,7 @@ export class Hub {
     for (const h of list) {
       const marker = this._makeMarker();
       marker.position.fromArray(h.position);
-      marker.userData = { id: h.id, label: h.label };
+      Object.assign(marker.userData, h); // conserve id, label, zone, … (sans écraser le halo)
       this.hotspots.add(marker);
     }
   }
