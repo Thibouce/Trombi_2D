@@ -29,4 +29,7 @@ export const SPLAT = {
 // splat chargé (astuce : ajoute ?debug à l'URL pour lire les coordonnées au clic).
 export const HOTSPOTS = [
   { id: 'bureau', label: 'Mon bureau', position: [0, 0.8, 0] },
+  { id: 'point', label: 'Hall', position: [-2.37, 0.00, 8.83] },
 ];
+
+
