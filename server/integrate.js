@@ -25,19 +25,7 @@ export function parseImageSize(value) {
   return value.trim(); // enum
 }
 
-const DEFAULT_PROMPT = `Tu édites une image panoramique équirectangulaire 360° (ratio 2:1) d'un lieu de bureau.
-Première image : la scène équirectangulaire (les locaux).
-Deuxième image : la photo d'une personne (visage / tête).
-
-Objectif : intègre cette personne dans la scène de façon réaliste, comme si elle
-se tenait naturellement debout dans ces locaux. Respecte impérativement :
-- la projection ÉQUIRECTANGULAIRE 360° et le ratio 2:1 de l'image de sortie ;
-- l'échelle humaine (taille réaliste, pieds au niveau du sol) ;
-- la perspective, l'éclairage, la balance des couleurs et les ombres portées de la scène ;
-- le reste de la scène doit rester INCHANGÉ (n'ajoute rien d'autre).
-
-Place la personne dans une zone dégagée au sol, bien visible. Rends une seule
-image équirectangulaire finale.`;
+const DEFAULT_PROMPT = `Replace the face of one of the characters by the close up face, respect the style in integration, keep the structure of the image`;
 
 // Récupère l'image générée (URL fal.media) et la renvoie en data URL, pour que
 // le client reçoive une image same-origin (pas de souci CORS pour la texture).
