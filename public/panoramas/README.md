@@ -3,10 +3,16 @@
 Dépose ici les images de tes styles. Elles sont servies à la racine du site
 (ex. `public/panoramas/style-1.jpg` → `/panoramas/style-1.jpg`).
 
+Les décors sont **regroupés par zone** dans `src/panoramas.js` ; chaque zone
+correspond à un point cliquable (hotspot) du hub 3D (champ `zone` dans
+`src/splat.js`). Cliquer un point propose les styles de sa zone.
+
 Fichiers attendus par défaut (voir `src/panoramas.js`) :
 
-- `style-1.<ext>` — panorama **équirectangulaire** (projection 360°, ratio **2:1**) du style 1
-- `style-2.<ext>` — panorama **équirectangulaire** du style 2
+- Zone **bureau** : `style-1.<ext>`, `style-2.<ext>` (déjà en place)
+- Zone **hall** : `hall-1.<ext>`, `hall-2.<ext>` (à ajouter)
+
+Chaque fichier est un panorama **équirectangulaire** (projection 360°, ratio **2:1**).
 
 **L'extension est facultative dans la config** : `src/panoramas.js` référence
 `/panoramas/style-1` (sans extension) et l'app essaie automatiquement

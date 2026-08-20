@@ -25,11 +25,11 @@ export const SPLAT = {
 };
 
 // Points cliquables. Chaque entrée est un marqueur 3D posé à `position` ;
-// cliquer dessus ouvre le choix des styles. Ajuste les coordonnées une fois le
-// splat chargé (astuce : ajoute ?debug à l'URL pour lire les coordonnées au clic).
+// cliquer dessus ouvre les styles de sa `zone` (clé dans src/panoramas.js).
+// Astuce : ?debug pour relever les coordonnées au clic.
 export const HOTSPOTS = [
-  { id: 'bureau', label: 'Mon bureau', position: [0, 0.8, 0] },
-  { id: 'point', label: 'Hall', position: [-2.37, 0.00, 8.83] },
+  { id: 'bureau', label: 'Mon bureau', position: [0, 0.8, 0], zone: 'bureau' },
+  { id: 'hall', label: 'Hall', position: [-2.37, 0.0, 8.83], zone: 'hall' },
 ];
 
 

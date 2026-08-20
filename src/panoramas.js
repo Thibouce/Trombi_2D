@@ -1,14 +1,24 @@
-// Décors disponibles dans le sélecteur de styles (miniatures cliquables).
-// Pour ajouter / modifier un style : édite ce tableau et dépose l'image
-// correspondante dans public/panoramas/ (référencée par /panoramas/<fichier>).
+// Décors regroupés PAR ZONE. Chaque zone correspond à un point cliquable
+// (hotspot) du hub 3D : le champ `zone` d'un hotspot (src/splat.js) pointe vers
+// une clé de cet objet, et cliquer ce point propose les styles de la zone.
 //
-//  - src   : le panorama ÉQUIRECTANGULAIRE (projection 360°, ratio 2:1) dans
-//            lequel on se projette au clic. L'EXTENSION EST FACULTATIVE : si tu
-//            l'omets, l'app essaie png, jpg, jpeg, webp, avif, gif et garde
-//            celle qui existe. Tu peux la forcer en la précisant (ex. .webp).
-//  - thumb : (optionnel) image affichée en miniature ; par défaut = src.
+// Chaque style :
+//  - id    : identifiant unique (sur TOUTES les zones).
 //  - label : texte affiché sous la miniature.
-export const STYLES = [
-  { id: 'style-1', label: 'Style 1', src: '/panoramas/style-1' },
-  { id: 'style-2', label: 'Style 2', src: '/panoramas/style-2' },
-];
+//  - src   : panorama ÉQUIRECTANGULAIRE (2:1). Extension FACULTATIVE (png, jpg,
+//            webp, avif, gif essayés dans l'ordre) — voir resolveImage.
+//  - thumb : (optionnel) miniature dédiée ; par défaut = src.
+export const PANORAMAS = {
+  // Zone "bureau" : les panoramas déjà en place.
+  bureau: [
+    { id: 'bureau-1', label: 'Style 1', src: '/panoramas/style-1' },
+    { id: 'bureau-2', label: 'Style 2', src: '/panoramas/style-2' },
+  ],
+
+  // Zone "hall" : dépose tes panoramas du hall dans public/panoramas/
+  // (ex. hall-1.png, hall-2.png) — l'extension est facultative.
+  hall: [
+    { id: 'hall-1', label: 'Style 1', src: '/panoramas/hall-1' },
+    { id: 'hall-2', label: 'Style 2', src: '/panoramas/hall-2' },
+  ],
+};

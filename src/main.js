@@ -3,7 +3,7 @@ import { Hub } from './scene/Hub.js';
 import { createDemoPanorama } from './scene/demoPanorama.js';
 import { Webcam } from './capture/Webcam.js';
 import { toScaledDataURL, integrateIntoScene } from './capture/integrateClient.js';
-import { STYLES } from './panoramas.js';
+import { PANORAMAS } from './panoramas.js';
 import { SPLAT, HOTSPOTS } from './splat.js';
 
 // ---- DOM ------------------------------------------------------------------
@@ -34,7 +34,7 @@ const debug = location.search.includes('debug');
 const hub = new Hub($('hub'), { debug });
 hub.setCamera(SPLAT.camera);
 hub.addHotspots(HOTSPOTS);
-hub.onHotspot = () => openStyleModal();
+hub.onHotspot = (data) => openStyleModal(data);
 hub.start();
 let refreshAlignReadout = () => {};
 hub
@@ -120,7 +120,13 @@ function goToHub() {
   setStage('hub');
 }
 
-function openStyleModal() {
+// Ouvre le choix des styles pour la zone du hotspot cliqué (ou la 1re zone).
+function openStyleModal(hotspot) {
+  const zones = Object.keys(PANORAMAS);
+  const zone = (hotspot && hotspot.zone) || zones[0];
+  buildStylePicker(PANORAMAS[zone] || []);
+  $('style-modal-title').textContent =
+    'Choisis ton décor' + (hotspot?.label ? ` — ${hotspot.label}` : '');
   $('style-modal').classList.remove('hidden');
 }
 function closeStyleModal() {
@@ -274,10 +280,11 @@ function resolveImage(pathOrBase) {
   });
 }
 
-// Construit le sélecteur de décors à partir de la config STYLES.
-function buildStylePicker() {
+// (Re)construit le sélecteur de décors à partir d'une liste de styles.
+function buildStylePicker(styles) {
   const picker = $('style-picker');
-  STYLES.forEach((style) => {
+  picker.innerHTML = '';
+  styles.forEach((style) => {
     const btn = document.createElement('button');
     btn.className = 'style-thumb';
     btn.dataset.id = style.id;
@@ -373,11 +380,10 @@ $('face-input').addEventListener('change', (e) => {
 $('reset-btn').addEventListener('click', resetScene);
 $('download-btn').addEventListener('click', downloadResult);
 $('back-hub').addEventListener('click', goToHub);
-$('enter-fallback').addEventListener('click', openStyleModal);
+$('enter-fallback').addEventListener('click', () => openStyleModal());
 $('style-cancel').addEventListener('click', closeStyleModal);
 
-buildStylePicker(); // sélecteur de décors (dans la modale)
-setStage('hub'); // on démarre sur le hub 3D
+setStage('hub'); // on démarre sur le hub 3D (le picker est bâti à l'ouverture de la modale)
 
 const autotourBtn = $('autotour-btn');
 autotourBtn.addEventListener('click', () => {
