@@ -2,10 +2,11 @@
 // cliquables (ex. les bureaux) qui ouvrent le choix des styles.
 
 // Fichier du splat à déposer dans public/splats/.
-// Formats supportés : .ksplat (recommandé, compressé), .splat, .ply.
-// (Convertis un .ply en .ksplat pour de meilleures perfs — voir le README.)
+// Formats supportés : .ply, .splat, .ksplat (le format est auto-détecté via
+// l'extension). Un .ply fonctionne tel quel ; pour de gros scans, un .ksplat
+// (compressé) charge plus vite — voir le README.
 export const SPLAT = {
-  url: '/splats/locaux.ksplat',
+  url: '/splats/locaux.ply',
 
   // Orientation / position / échelle du splat dans la scène. Les scans sont
   // souvent tournés ou décalés : ajuste ici jusqu'à ce que ce soit droit.

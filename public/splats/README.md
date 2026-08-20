@@ -3,15 +3,20 @@
 Dépose ici le scan 3D (Gaussian Splatting) de tes locaux. Il est servi à la
 racine du site (`public/splats/locaux.ksplat` → `/splats/locaux.ksplat`).
 
-Fichier attendu par défaut (voir `src/splat.js`) : **`locaux.ksplat`**.
+Fichier attendu par défaut (voir `src/splat.js`) : **`locaux.ply`**.
 
 ## Formats supportés
 
-- `.ksplat` — **recommandé** (compressé, chargement rapide)
+- `.ply` — sortie brute de la plupart des outils de splatting (fonctionne tel quel)
 - `.splat`
-- `.ply` (sortie brute de la plupart des outils de splatting ; plus lourd)
+- `.ksplat` — compressé, **chargement plus rapide** (idéal pour les gros scans)
 
-Change le nom / l'extension dans `src/splat.js` (`SPLAT.url`) si besoin.
+Le format est auto-détecté via l'extension. Change le nom / l'extension dans
+`src/splat.js` (`SPLAT.url`) si ton fichier a un autre nom.
+
+> ⚠️ Un `.ply` peut être **très lourd** (50–300 Mo). Évite de le committer dans
+> git (ajoute-le à `.gitignore` si besoin) ; pour de meilleures perfs de
+> chargement, convertis-le en `.ksplat`.
 
 ## Orientation
 
