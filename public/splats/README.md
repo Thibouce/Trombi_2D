@@ -18,11 +18,16 @@ Le format est auto-détecté via l'extension. Change le nom / l'extension dans
 > git (ajoute-le à `.gitignore` si besoin) ; pour de meilleures perfs de
 > chargement, convertis-le en `.ksplat`.
 
-## Orientation
+## Orientation (redresser le splat)
 
-Les scans sont souvent tournés ou décalés. Ajuste dans `src/splat.js` :
-`position`, `rotationEuler` (radians), `scale`, et la caméra de départ
-(`camera.position` / `camera.target`).
+Les scans sont souvent de travers. Ouvre l'app avec **`?debug`**
+(`http://localhost:5173/?debug`) : un panneau **« Aligner le splat »** (en haut
+à gauche) permet de le faire pivoter en direct (X/Y/Z, pas de 15° et 90°)
+jusqu'à ce que le **toit soit en haut et le sol en bas**. Clique **« Copier »**
+et colle la valeur dans `rotationEuler` (`src/splat.js`).
+
+Tu peux aussi ajuster `position`, `scale` et la caméra de départ
+(`camera.position` / `camera.target`) dans `src/splat.js`.
 
 ## Placer les points cliquables (bureaux)
 

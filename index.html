@@ -25,6 +25,34 @@
         <button id="enter-fallback" class="btn btn-ghost" title="Ouvrir le choix des styles sans passer par la 3D">Entrer sans la 3D →</button>
       </section>
 
+      <!-- Outil d'alignement du splat (visible avec ?debug) -->
+      <section id="align-panel" class="align-panel hidden">
+        <strong>Aligner le splat</strong>
+        <div class="align-grid">
+          <span>X</span>
+          <button class="btn btn-ghost" data-axis="x" data-deg="-90">−90</button>
+          <button class="btn btn-ghost" data-axis="x" data-deg="-15">−15</button>
+          <button class="btn btn-ghost" data-axis="x" data-deg="15">+15</button>
+          <button class="btn btn-ghost" data-axis="x" data-deg="90">+90</button>
+          <span>Y</span>
+          <button class="btn btn-ghost" data-axis="y" data-deg="-90">−90</button>
+          <button class="btn btn-ghost" data-axis="y" data-deg="-15">−15</button>
+          <button class="btn btn-ghost" data-axis="y" data-deg="15">+15</button>
+          <button class="btn btn-ghost" data-axis="y" data-deg="90">+90</button>
+          <span>Z</span>
+          <button class="btn btn-ghost" data-axis="z" data-deg="-90">−90</button>
+          <button class="btn btn-ghost" data-axis="z" data-deg="-15">−15</button>
+          <button class="btn btn-ghost" data-axis="z" data-deg="15">+15</button>
+          <button class="btn btn-ghost" data-axis="z" data-deg="90">+90</button>
+        </div>
+        <code id="align-readout">rotationEuler: [0, 0, 0]</code>
+        <div class="align-actions">
+          <button id="align-copy" class="btn btn-primary">Copier</button>
+          <button id="align-reset" class="btn btn-ghost">Reset</button>
+        </div>
+        <span class="align-hint">Redresse (toit en haut, sol en bas), puis « Copier » → colle dans src/splat.js</span>
+      </section>
+
       <!-- Panneau de capture webcam (étape 2) -->
       <section id="capture-panel" class="panel hidden">
         <div class="capture-stage">

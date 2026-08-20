@@ -9,7 +9,10 @@ export const SPLAT = {
   url: '/splats/locaux.ply',
 
   // Orientation / position / échelle du splat dans la scène. Les scans sont
-  // souvent tournés ou décalés : ajuste ici jusqu'à ce que ce soit droit.
+  // souvent tournés (toit sur le côté, etc.).
+  // ➜ Ouvre l'app avec ?debug : un panneau "Aligner le splat" (en haut à gauche)
+  //   te laisse le redresser en direct, puis "Copier" te donne le rotationEuler
+  //   exact à coller ci-dessous.
   position: [0, 0, 0],
   rotationEuler: [0, 0, 0], // radians (x, y, z)
   scale: 1,

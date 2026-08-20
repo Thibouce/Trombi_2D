@@ -42,6 +42,39 @@ hub.loadSplat(SPLAT).catch((err) => {
     "Splat des locaux introuvable (public/splats/). Tu peux entrer sans la 3D ci-dessous.";
 });
 
+// Outil d'alignement (mode ?debug) : redresser le splat en direct.
+function setupAlignTool() {
+  const panel = $('align-panel');
+  const readout = $('align-readout');
+  panel.classList.remove('hidden');
+
+  const fmt = (e) => `rotationEuler: [${e.map((v) => v.toFixed(3)).join(', ')}]`;
+  const refresh = () => {
+    readout.textContent = fmt(hub.getRotationEuler());
+  };
+  refresh();
+
+  panel.querySelectorAll('button[data-axis]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const deg = Number(btn.dataset.deg);
+      hub.nudgeRotation(btn.dataset.axis, (deg * Math.PI) / 180);
+      refresh();
+    });
+  });
+  $('align-reset').addEventListener('click', () => {
+    hub.resetRotation();
+    refresh();
+  });
+  $('align-copy').addEventListener('click', async () => {
+    const line = fmt(hub.getRotationEuler());
+    try {
+      await navigator.clipboard.writeText(line);
+    } catch {}
+    console.log('[hub] ' + line);
+  });
+}
+if (debug) setupAlignTool();
+
 // ---- Étapes ---------------------------------------------------------------
 function setStage(stage) {
   document.body.dataset.stage = stage;

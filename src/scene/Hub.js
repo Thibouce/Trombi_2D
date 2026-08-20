@@ -48,22 +48,49 @@ export class Hub {
 
   // Charge le splat. Renvoie une promesse résolue quand il est prêt.
   async loadSplat(cfg) {
+    this._cfg = cfg;
     this.viewer = new GaussianSplats3D.DropInViewer({
       // Pas de SharedArrayBuffer : évite d'exiger les en-têtes COOP/COEP.
       sharedMemoryForWorkers: false,
       gpuAcceleratedSort: false,
     });
-    const euler = cfg.rotationEuler || [0, 0, 0];
-    const quat = new THREE.Quaternion().setFromEuler(new THREE.Euler(...euler));
+    // On charge sans transformer, puis on applique la transfo à l'objet lui-même
+    // (permet de la modifier en direct via l'outil d'alignement).
     await this.viewer.addSplatScene(cfg.url, {
       splatAlphaRemovalThreshold: 5,
       showLoadingUI: false,
       progressiveLoad: false,
-      position: cfg.position || [0, 0, 0],
-      rotation: [quat.x, quat.y, quat.z, quat.w],
-      scale: [cfg.scale ?? 1, cfg.scale ?? 1, cfg.scale ?? 1],
     });
     this.scene.add(this.viewer);
+    this.applyTransform(cfg);
+  }
+
+  // Applique position / rotation (Euler XYZ, radians) / échelle au splat.
+  applyTransform(cfg) {
+    if (!this.viewer) return;
+    this._euler = new THREE.Euler(...(cfg.rotationEuler || [0, 0, 0]));
+    this.viewer.position.fromArray(cfg.position || [0, 0, 0]);
+    this.viewer.scale.setScalar(cfg.scale ?? 1);
+    this.viewer.setRotationFromEuler(this._euler);
+  }
+
+  // Fait pivoter le splat autour d'un axe ('x'|'y'|'z') et renvoie l'Euler courant.
+  nudgeRotation(axis, deltaRad) {
+    if (!this.viewer || !this._euler) return [0, 0, 0];
+    this._euler[axis] += deltaRad;
+    this.viewer.setRotationFromEuler(this._euler);
+    return [this._euler.x, this._euler.y, this._euler.z];
+  }
+
+  resetRotation() {
+    if (!this._cfg) return [0, 0, 0];
+    this._euler = new THREE.Euler(...(this._cfg.rotationEuler || [0, 0, 0]));
+    this.viewer?.setRotationFromEuler(this._euler);
+    return [this._euler.x, this._euler.y, this._euler.z];
+  }
+
+  getRotationEuler() {
+    return this._euler ? [this._euler.x, this._euler.y, this._euler.z] : [0, 0, 0];
   }
 
   // Ajoute les marqueurs cliquables.
