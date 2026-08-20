@@ -7,15 +7,20 @@ borne d'accueil, un salon ou un mur d'écran.
 
 ## ✨ Fonctionnement
 
-1. **Capture** — l'utilisateur se prend en photo (webcam, cadrage guidé par un ovale).
-2. **Intégration IA** — la photo + le panorama équirectangulaire sont envoyés à
+0. **Hub 3D** — au démarrage, un **Gaussian Splat** des locaux s'affiche comme un
+   objet 3D qu'on peut orbiter. On **clique sur un point** (ex. son bureau) → le
+   **choix des styles** s'ouvre. (Voir `public/splats/` et `src/splat.js`.)
+1. **Choix du décor** — on clique la miniature du style voulu → on est projeté
+   dans le **panorama 360°** correspondant.
+2. **Capture** — l'utilisateur se prend en photo (webcam) ou importe une image.
+3. **Intégration IA** — la photo + le panorama équirectangulaire sont envoyés à
    **GPT Image 2** (via **fal.ai**) au travers d'un **proxy serveur**. Le modèle
    fond la personne dans la scène (échelle, perspective, éclairage, ombres) et
    renvoie un nouveau panorama équirectangulaire. La taille de sortie est forcée
-   en **3840×1920 (4K, 2:1)** via `FAL_IMAGE_SIZE` pour préserver la projection
-   équirectangulaire à la résolution maximale.
-3. **Immersion** — le panorama édité remplace la scène ; la caméra pivote en
+   en **3840×1920 (4K, 2:1)** via `FAL_IMAGE_SIZE`.
+4. **Immersion** — le panorama édité remplace la scène ; la caméra pivote en
    « tour auto » ou l'utilisateur regarde autour (glisser / molette pour zoomer).
+   Bouton **« ← Locaux »** pour revenir au hub 3D.
 
 > 🔒 La **clé API reste côté serveur** : le navigateur appelle `/api/integrate`,
 > jamais l'API fal.ai directement.
@@ -78,13 +83,16 @@ index.html
 server.js                 # serveur de production (statique + /api/integrate)
 vite.config.js            # branche le proxy API en dev, charge .env
 public/
-  panoramas/              # tes décors 360 (style-1.jpg, style-2.jpg, …)
+  panoramas/              # tes décors 360 (style-1.*, style-2.*, …)
+  splats/                 # le Gaussian Splat des locaux (locaux.ksplat)
 src/
-  main.js                 # orchestration + UI
+  main.js                 # orchestration + UI + gestion des étapes (hub/pano)
   panoramas.js            # liste des décors du sélecteur (styles)
+  splat.js                # config du splat + points cliquables (hotspots)
   styles.css
   scene/
     Panorama.js           # visionneuse 360 (sphère, caméra panoramique)
+    Hub.js                # hub 3D : Gaussian Splat + orbite + points cliquables
     demoPanorama.js       # panorama équirectangulaire de démo (procédural)
   capture/
     Webcam.js             # accès webcam + capture d'image
@@ -106,5 +114,6 @@ server/
 ## 🛠️ Stack
 
 - [Three.js](https://threejs.org/) — rendu 3D / 360
+- [@mkkellogg/gaussian-splats-3d](https://github.com/mkkellogg/GaussianSplats3D) — hub 3D (Gaussian Splatting)
 - [Vite](https://vitejs.dev/) — dev server & build
 - [fal.ai — GPT Image 2](https://fal.ai/models/openai/gpt-image-2/edit) — édition d'image

@@ -1,8 +1,10 @@
 import { Panorama } from './scene/Panorama.js';
+import { Hub } from './scene/Hub.js';
 import { createDemoPanorama } from './scene/demoPanorama.js';
 import { Webcam } from './capture/Webcam.js';
 import { toScaledDataURL, integrateIntoScene } from './capture/integrateClient.js';
 import { STYLES } from './panoramas.js';
+import { SPLAT, HOTSPOTS } from './splat.js';
 
 // ---- DOM ------------------------------------------------------------------
 const $ = (id) => document.getElementById(id);
@@ -18,15 +20,57 @@ const state = {
   captureSource: 'webcam', // 'webcam' | 'import'
 };
 
-// ---- Scène 360 ------------------------------------------------------------
+// ---- Scène 360 (étape 2) --------------------------------------------------
 const panorama = new Panorama($('scene'));
 const demo = createDemoPanorama();
 panorama.setPanoramaTexture(demo);
-panorama.start();
-// La démo sert de scène de base par défaut. On la garde en haute résolution
-// (jusqu'à 3840 de large) pour alimenter la sortie 4K sans upscale.
+let panoramaStarted = false;
+// La démo sert de base par défaut tant qu'aucun style n'a été choisi.
 state.originalSceneDataUrl = toScaledDataURL(demo, 3840, 0.92);
 state.sceneDataUrl = state.originalSceneDataUrl;
+
+// ---- Hub 3D (étape 1) -----------------------------------------------------
+const debug = location.search.includes('debug');
+const hub = new Hub($('hub'), { debug });
+hub.setCamera(SPLAT.camera);
+hub.addHotspots(HOTSPOTS);
+hub.onHotspot = () => openStyleModal();
+hub.start();
+hub.loadSplat(SPLAT).catch((err) => {
+  console.warn('[hub] splat non chargé :', err);
+  $('hub-hint').textContent =
+    "Splat des locaux introuvable (public/splats/). Tu peux entrer sans la 3D ci-dessous.";
+});
+
+// ---- Étapes ---------------------------------------------------------------
+function setStage(stage) {
+  document.body.dataset.stage = stage;
+  if (stage === 'hub') {
+    closeCapture();
+    hub.start();
+    $('subtitle').textContent = 'Explore les locaux et clique sur ton bureau 🖱️';
+  } else {
+    hub.stop();
+    if (!panoramaStarted) {
+      panorama.start();
+      panoramaStarted = true;
+    }
+    $('subtitle').textContent = 'Prends-toi en photo, entre dans le décor 🙂';
+  }
+}
+function goToPano() {
+  setStage('pano');
+}
+function goToHub() {
+  setStage('hub');
+}
+
+function openStyleModal() {
+  $('style-modal').classList.remove('hidden');
+}
+function closeStyleModal() {
+  $('style-modal').classList.add('hidden');
+}
 
 // ---- Webcam ---------------------------------------------------------------
 const webcam = new Webcam(video);
@@ -210,7 +254,7 @@ function setActiveStyle(id) {
   });
 }
 
-// Projette la scène dans le décor du style choisi.
+// Projette la scène dans le décor du style choisi, puis passe au panorama.
 async function selectStyle(style) {
   showLoader('Chargement du décor…');
   try {
@@ -220,6 +264,8 @@ async function selectStyle(style) {
     state.sceneDataUrl = state.originalSceneDataUrl;
     setDownloadEnabled(false); // nouveau décor -> plus de résultat en cours
     setActiveStyle(style.id);
+    closeStyleModal();
+    goToPano();
   } catch (err) {
     alert(
       `Décor introuvable (${style.src}.*).\n` +
@@ -271,8 +317,12 @@ $('face-input').addEventListener('change', (e) => {
 });
 $('reset-btn').addEventListener('click', resetScene);
 $('download-btn').addEventListener('click', downloadResult);
+$('back-hub').addEventListener('click', goToHub);
+$('enter-fallback').addEventListener('click', openStyleModal);
+$('style-cancel').addEventListener('click', closeStyleModal);
 
-buildStylePicker(); // sélecteur de décors
+buildStylePicker(); // sélecteur de décors (dans la modale)
+setStage('hub'); // on démarre sur le hub 3D
 
 const autotourBtn = $('autotour-btn');
 autotourBtn.addEventListener('click', () => {

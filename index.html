@@ -6,18 +6,26 @@
     <title>Trombi 2D — Expérience immersive 360°</title>
     <link rel="stylesheet" href="/src/styles.css" />
   </head>
-  <body>
-    <!-- Scène 3D (panorama 360 + tête intégrée) -->
+  <body data-stage="hub">
+    <!-- Étape 1 : hub 3D (Gaussian Splat des locaux) -->
+    <canvas id="hub"></canvas>
+    <!-- Étape 2 : panorama 360 (une fois un style choisi) -->
     <canvas id="scene"></canvas>
 
     <!-- Interface superposée -->
     <div id="ui">
       <header class="topbar">
         <h1>Trombi&nbsp;2D</h1>
-        <p class="subtitle">Prends-toi en photo, entre dans nos locaux.</p>
+        <p class="subtitle" id="subtitle">Explore les locaux et clique sur ton bureau 🖱️</p>
       </header>
 
-      <!-- Panneau de capture webcam -->
+      <!-- Aide du hub (étape 1) -->
+      <section id="hub-ui" class="hub-ui">
+        <p class="hub-hint">Fais tourner les locaux et clique sur un point 🔵 pour choisir ton décor.</p>
+        <button id="enter-fallback" class="btn btn-ghost" title="Ouvrir le choix des styles sans passer par la 3D">Entrer sans la 3D →</button>
+      </section>
+
+      <!-- Panneau de capture webcam (étape 2) -->
       <section id="capture-panel" class="panel hidden">
         <div class="capture-stage">
           <video id="webcam" autoplay playsinline muted></video>
@@ -28,16 +36,21 @@
           <button id="shoot-btn" class="btn btn-primary">📸 Prendre la photo</button>
           <button id="retake-btn" class="btn hidden">↺ Reprendre</button>
           <button id="place-btn" class="btn btn-primary hidden">✨ M'intégrer dans la scène</button>
-          <button id="capture-cancel" class="btn btn-ghost">Annuler</button>
+          <button id="capture-cancel" class="btn btn-ghost">Fermer</button>
         </div>
         <p class="hint">Cadre bien ta tête dans l'ovale, souris 🙂 — l'IA t'intègre ensuite dans les locaux.</p>
       </section>
 
-      <!-- Sélecteur de décors (miniatures cliquables) -->
-      <aside id="style-picker" class="style-picker" aria-label="Choix du décor"></aside>
+      <!-- Choix des styles (modale, ouverte au clic sur un point) -->
+      <section id="style-modal" class="panel style-modal hidden">
+        <h2 class="modal-title">Choisis ton décor</h2>
+        <div id="style-picker" class="style-picker"></div>
+        <button id="style-cancel" class="btn btn-ghost">Annuler</button>
+      </section>
 
-      <!-- Barre d'actions principale -->
+      <!-- Barre d'actions (étape 2 : panorama) -->
       <footer class="bottombar">
+        <button id="back-hub" class="btn btn-ghost" title="Revenir aux locaux (3D)">← Locaux</button>
         <button id="open-capture" class="btn btn-primary">🙂 Me prendre en photo</button>
         <label class="btn btn-primary" title="Importer une image de visage (pratique pour tester)">
           🖼️ Importer un visage
@@ -45,7 +58,7 @@
         </label>
         <button id="download-btn" class="btn btn-ghost" title="Télécharger le panorama résultat" disabled>⬇️ Télécharger</button>
         <button id="autotour-btn" class="btn btn-ghost" aria-pressed="true">⏸ Tour auto</button>
-        <button id="reset-btn" class="btn btn-ghost" title="Revenir au panorama d'origine">↺ Réinitialiser</button>
+        <button id="reset-btn" class="btn btn-ghost" title="Revenir au décor d'origine">↺ Réinitialiser</button>
       </footer>
     </div>
 

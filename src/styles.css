@@ -20,7 +20,7 @@ html, body {
   -webkit-tap-highlight-color: transparent;
 }
 
-#scene {
+#scene, #hub {
   position: fixed;
   inset: 0;
   width: 100vw;
@@ -29,7 +29,13 @@ html, body {
   cursor: grab;
   touch-action: none;
 }
-#scene:active { cursor: grabbing; }
+#scene:active, #hub:active { cursor: grabbing; }
+
+/* Visibilité selon l'étape (hub 3D ou panorama) */
+body[data-stage="hub"] #scene { display: none; }
+body[data-stage="hub"] .bottombar { display: none; }
+body[data-stage="pano"] #hub { display: none; }
+body[data-stage="pano"] .hub-ui { display: none; }
 
 #ui {
   position: fixed;
@@ -171,20 +177,49 @@ html, body {
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* Sélecteur de décors (miniatures) */
-.style-picker {
+/* Étape hub : aide centrée en bas */
+.hub-ui {
   position: fixed;
-  top: 92px;
-  right: 20px;
+  left: 0;
+  right: 0;
+  bottom: 28px;
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 12px;
-  z-index: 6;
+  padding: 0 20px;
+  text-align: center;
+}
+.hub-hint {
+  margin: 0;
+  padding: 10px 18px;
+  background: rgba(18, 22, 33, 0.7);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  backdrop-filter: blur(8px);
+  font-size: 0.9rem;
+  max-width: 90vw;
+}
+
+/* Modale de choix des styles */
+.style-modal {
+  width: min(92vw, 560px);
+  text-align: center;
+}
+.modal-title { margin: 0 0 16px; font-size: 1.15rem; }
+
+/* Grille de miniatures (dans la modale) */
+.style-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  justify-content: center;
+  margin-bottom: 16px;
 }
 .style-thumb {
   position: relative;
-  width: 132px;
-  height: 74px;
+  width: 180px;
+  height: 101px;
   padding: 0;
   border: 2px solid var(--border);
   border-radius: 12px;
@@ -217,8 +252,7 @@ html, body {
 }
 
 @media (max-width: 640px) {
-  .style-picker { flex-direction: row; top: auto; bottom: 92px; right: 12px; left: 12px; justify-content: center; }
-  .style-thumb { width: 108px; height: 60px; }
+  .style-thumb { width: 140px; height: 79px; }
 }
 
 .hidden { display: none !important; }
