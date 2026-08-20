@@ -36,37 +36,59 @@ hub.setCamera(SPLAT.camera);
 hub.addHotspots(HOTSPOTS);
 hub.onHotspot = () => openStyleModal();
 hub.start();
-hub.loadSplat(SPLAT).catch((err) => {
-  console.warn('[hub] splat non chargé :', err);
-  $('hub-hint').textContent =
-    "Splat des locaux introuvable (public/splats/). Tu peux entrer sans la 3D ci-dessous.";
-});
+let refreshAlignReadout = () => {};
+hub
+  .loadSplat(SPLAT)
+  .then(() => refreshAlignReadout()) // le splat est chargé -> readout à jour
+  .catch((err) => {
+    console.warn('[hub] splat non chargé :', err);
+    $('hub-hint').textContent =
+      "Splat des locaux introuvable (public/splats/). Tu peux entrer sans la 3D ci-dessous.";
+  });
 
-// Outil d'alignement (mode ?debug) : redresser le splat en direct.
+// Outils de mise au point (mode ?debug) : aligner le splat + placer des points.
 function setupAlignTool() {
   const panel = $('align-panel');
   const readout = $('align-readout');
   panel.classList.remove('hidden');
 
   const fmt = (e) => `rotationEuler: [${e.map((v) => v.toFixed(3)).join(', ')}]`;
-  const refresh = () => {
+  refreshAlignReadout = () => {
     readout.textContent = fmt(hub.getRotationEuler());
   };
-  refresh();
+  refreshAlignReadout();
 
   panel.querySelectorAll('button[data-axis]').forEach((btn) => {
     btn.addEventListener('click', () => {
       const deg = Number(btn.dataset.deg);
       hub.nudgeRotation(btn.dataset.axis, (deg * Math.PI) / 180);
-      refresh();
+      refreshAlignReadout();
     });
   });
   $('align-reset').addEventListener('click', () => {
     hub.resetRotation();
-    refresh();
+    refreshAlignReadout();
   });
   $('align-copy').addEventListener('click', async () => {
     const line = fmt(hub.getRotationEuler());
+    try {
+      await navigator.clipboard.writeText(line);
+    } catch {}
+    console.log('[hub] ' + line);
+  });
+
+  // Placement de points : le clic pose un repère et affiche ses coordonnées.
+  const pointReadout = $('point-readout');
+  let lastPoint = null;
+  hub.onPickPoint = (coords) => {
+    lastPoint = coords;
+    pointReadout.textContent = `[${coords.map((v) => v.toFixed(2)).join(', ')}]`;
+  };
+  $('point-copy').addEventListener('click', async () => {
+    if (!lastPoint) return;
+    const line = `{ id: 'point', label: 'Nouveau point', position: [${lastPoint
+      .map((v) => v.toFixed(2))
+      .join(', ')}] },`;
     try {
       await navigator.clipboard.writeText(line);
     } catch {}

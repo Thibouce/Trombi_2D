@@ -153,11 +153,29 @@ export class Hub {
     }
 
     if (this.debug) {
+      // Point sous le curseur : intersection du sol (y=0), sinon à 3 m devant.
       const p = new THREE.Vector3();
-      if (this.raycaster.ray.intersectPlane(this._debugPlane, p)) {
-        console.log(`[hub] point sol ≈ [${p.x.toFixed(2)}, ${p.y.toFixed(2)}, ${p.z.toFixed(2)}]`);
+      if (!this.raycaster.ray.intersectPlane(this._debugPlane, p)) {
+        this.raycaster.ray.at(3, p);
       }
+      this._placePickMarker(p);
+      const coords = [p.x, p.y, p.z];
+      console.log(`[hub] point ≈ [${coords.map((v) => v.toFixed(2)).join(', ')}]`);
+      this.onPickPoint?.(coords);
     }
+  }
+
+  // Repère vert de prévisualisation (mode debug) posé au clic.
+  _placePickMarker(pos) {
+    if (!this._pickMarker) {
+      this._pickMarker = new THREE.Mesh(
+        new THREE.SphereGeometry(0.1, 20, 14),
+        new THREE.MeshBasicMaterial({ color: 0x38d66b, depthTest: false, transparent: true })
+      );
+      this._pickMarker.renderOrder = 1000;
+      this.scene.add(this._pickMarker);
+    }
+    this._pickMarker.position.copy(pos);
   }
 
   _onResize() {
