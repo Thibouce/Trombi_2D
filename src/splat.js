@@ -14,7 +14,7 @@ export const SPLAT = {
   //   te laisse le redresser en direct, puis "Copier" te donne le rotationEuler
   //   exact à coller ci-dessous.
   position: [0, 0, 0],
-  rotationEuler: [0, 0, 0], // radians (x, y, z)
+  rotationEuler: [-1.571, 0.000, 0.000], // radians (x, y, z)
   scale: 1,
 
   // Caméra d'orbite au démarrage.
