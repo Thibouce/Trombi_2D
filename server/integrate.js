@@ -41,7 +41,8 @@ async function fetchAsDataUrl(url) {
 export async function integrate({
   apiKey,
   model = DEFAULT_MODEL,
-  personDataUrl,
+  personDataUrl, // rétrocompat : un seul visage
+  personDataUrls, // plusieurs visages (références supplémentaires)
   sceneDataUrl,
   prompt = DEFAULT_PROMPT,
   imageSize = DEFAULT_IMAGE_SIZE,
@@ -55,16 +56,24 @@ export async function integrate({
     err.status = 500;
     throw err;
   }
-  if (!sceneDataUrl || !personDataUrl) {
-    const err = new Error('Images manquantes (scène et/ou personne).');
+
+  const persons = (personDataUrls?.length ? personDataUrls : [personDataUrl]).filter(Boolean);
+  if (!sceneDataUrl || persons.length === 0) {
+    const err = new Error('Images manquantes (scène et/ou au moins un visage).');
+    err.status = 400;
+    throw err;
+  }
+  // gpt-image-2/edit accepte au maximum 16 images d'entrée (scène incluse).
+  if (persons.length > 15) {
+    const err = new Error('Trop de visages (maximum 15 par intégration).');
     err.status = 400;
     throw err;
   }
 
   const body = {
     prompt,
-    // Ordre attendu par le prompt : [scène, personne].
-    image_urls: [sceneDataUrl, personDataUrl],
+    // Ordre : [scène, visage1, visage2, ...].
+    image_urls: [sceneDataUrl, ...persons],
     num_images: 1,
   };
   // N.B. : ne PAS envoyer input_fidelity — gpt-image-2 le refuse (toujours haute fidélité).
@@ -134,6 +143,7 @@ export async function handleIntegrateRequest(req, res, { apiKey, model, options 
       apiKey,
       model,
       personDataUrl: payload.personDataUrl,
+      personDataUrls: payload.personDataUrls,
       sceneDataUrl: payload.sceneDataUrl,
       prompt: payload.prompt,
       imageSize: payload.imageSize ?? options.imageSize,
