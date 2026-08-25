@@ -20,6 +20,8 @@ const state = {
   sceneDataUrl: null, // panorama courant envoyé au modèle
   captureSource: 'webcam', // 'webcam' | 'import'
   people: [], // data URLs des visages à intégrer (références gpt-image-2)
+  stylePrompt: null, // prompt spécifique au style choisi (sinon défaut serveur)
+  styleRefDataUrl: null, // image de référence du style choisi (optionnelle)
 };
 
 // ---- Scène 360 (étape 2) --------------------------------------------------
@@ -273,6 +275,8 @@ async function integrateAll() {
     const editedDataUrl = await integrateIntoScene({
       personDataUrls: state.people,
       sceneDataUrl: state.sceneDataUrl,
+      styleRefDataUrl: state.styleRefDataUrl,
+      prompt: state.stylePrompt,
     });
     await applySceneImage(editedDataUrl);
     state.sceneDataUrl = editedDataUrl; // la scène éditée devient la nouvelle base
@@ -372,6 +376,19 @@ async function selectStyle(style) {
     panorama.setPanoramaTexture(img);
     state.originalSceneDataUrl = toScaledDataURL(img, 3840, 0.92);
     state.sceneDataUrl = state.originalSceneDataUrl;
+
+    // Prompt et image de référence spécifiques à ce style (optionnels).
+    state.stylePrompt = style.prompt || null;
+    state.styleRefDataUrl = null;
+    if (style.styleRef) {
+      try {
+        const { img: refImg } = await resolveImage(style.styleRef);
+        state.styleRefDataUrl = toScaledDataURL(refImg, 1536, 0.92);
+      } catch {
+        console.warn('[style] référence introuvable :', style.styleRef);
+      }
+    }
+
     setDownloadEnabled(false); // nouveau décor -> plus de résultat en cours
     setActiveStyle(style.id);
     closeStyleModal();

@@ -14,6 +14,18 @@ Fichiers attendus par défaut (voir `src/panoramas.js`) :
 
 Chaque fichier est un panorama **équirectangulaire** (projection 360°, ratio **2:1**).
 
+## Prompt et référence par style (optionnel)
+
+Dans `src/panoramas.js`, un style peut porter :
+- **`prompt`** — un prompt d'intégration propre à ce style (sinon le prompt par
+  défaut du serveur est utilisé).
+- **`styleRef`** — une **image de référence de style** (déposée aussi dans
+  `public/panoramas/`, extension facultative) envoyée au modèle **en plus** du
+  décor et des visages.
+
+Ordre des images reçues par le modèle : **1)** le décor, **2)** la référence de
+style (si définie), **puis** les visages. Écris le prompt du style en fonction.
+
 **L'extension est facultative dans la config** : `src/panoramas.js` référence
 `/panoramas/style-1` (sans extension) et l'app essaie automatiquement
 `png, jpg, jpeg, webp, avif, gif`, en gardant la première qui existe. Tu peux

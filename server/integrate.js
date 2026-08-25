@@ -43,6 +43,7 @@ export async function integrate({
   model = DEFAULT_MODEL,
   personDataUrl, // rétrocompat : un seul visage
   personDataUrls, // plusieurs visages (références supplémentaires)
+  styleRefDataUrl, // image de référence du style (optionnelle)
   sceneDataUrl,
   prompt = DEFAULT_PROMPT,
   imageSize = DEFAULT_IMAGE_SIZE,
@@ -63,17 +64,21 @@ export async function integrate({
     err.status = 400;
     throw err;
   }
-  // gpt-image-2/edit accepte au maximum 16 images d'entrée (scène incluse).
-  if (persons.length > 15) {
-    const err = new Error('Trop de visages (maximum 15 par intégration).');
+  const styleRefs = styleRefDataUrl ? [styleRefDataUrl] : [];
+  // gpt-image-2/edit accepte au maximum 16 images d'entrée (scène + réf + visages).
+  const total = 1 + styleRefs.length + persons.length;
+  if (total > 16) {
+    const err = new Error(
+      `Trop d'images (${total}/16). Réduis le nombre de visages (max ${15 - styleRefs.length}).`
+    );
     err.status = 400;
     throw err;
   }
 
   const body = {
     prompt,
-    // Ordre : [scène, visage1, visage2, ...].
-    image_urls: [sceneDataUrl, ...persons],
+    // Ordre : [scène, référence de style (si définie), visage1, visage2, ...].
+    image_urls: [sceneDataUrl, ...styleRefs, ...persons],
     num_images: 1,
   };
   // N.B. : ne PAS envoyer input_fidelity — gpt-image-2 le refuse (toujours haute fidélité).
@@ -144,6 +149,7 @@ export async function handleIntegrateRequest(req, res, { apiKey, model, options 
       model,
       personDataUrl: payload.personDataUrl,
       personDataUrls: payload.personDataUrls,
+      styleRefDataUrl: payload.styleRefDataUrl,
       sceneDataUrl: payload.sceneDataUrl,
       prompt: payload.prompt,
       imageSize: payload.imageSize ?? options.imageSize,
