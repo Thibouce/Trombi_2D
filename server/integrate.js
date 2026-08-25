@@ -25,7 +25,7 @@ export function parseImageSize(value) {
   return value.trim(); // enum
 }
 
-const DEFAULT_PROMPT = `Replace the face of one of the characters by the close up face, respect the style in integration, keep the structure of the image`;
+const DEFAULT_PROMPT = `adapt the style of the face picture to the clay style image, integrate the close up face on a character in the image respecting the characters clay style, must respect clay eyes style. Use the image with dog as style reference, character must set at the place of one of the characters in the office. Keep structure of the image`;
 
 // Récupère l'image générée (URL fal.media) et la renvoie en data URL, pour que
 // le client reçoive une image same-origin (pas de souci CORS pour la texture).

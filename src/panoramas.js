@@ -23,8 +23,9 @@ export const PANORAMAS = {
     //   styleRef: '/panoramas/ref-style-1',
     //   prompt: 'The first image is the scene, the second is the style reference. Replace the face of a character with each provided face, matching the style reference.',
     // },
-    { id: 'bureau-1', label: 'Style 1', src: '/panoramas/style-1' },
-    { id: 'bureau-2', label: 'Style 2', src: '/panoramas/style-2' },
+    { id: 'bureau-1', label: 'Felt', src: '/panoramas/style-1' },
+    { id: 'bureau-2', label: 'Comic', src: '/panoramas/style-2' },
+    { id: 'bureau-3', label: 'Clay', src: '/panoramas/style-3' }
   ],
 
   // Zone "hall" : dépose tes panoramas du hall dans public/panoramas/
