@@ -2,6 +2,48 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import * as GaussianSplats3D from '@mkkellogg/gaussian-splats-3d';
 
+// Textures des repères (générées une fois, en blanc) : disque plein, anneau, halo.
+const _texCache = {};
+function markerTexture(kind) {
+  if (_texCache[kind]) return _texCache[kind];
+  const s = 128;
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = s;
+  const ctx = canvas.getContext('2d');
+  const c = s / 2;
+  if (kind === 'ring') {
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = s * 0.05;
+    ctx.beginPath();
+    ctx.arc(c, c, s * 0.42, 0, Math.PI * 2);
+    ctx.stroke();
+  } else if (kind === 'disc') {
+    ctx.fillStyle = '#fff';
+    ctx.beginPath();
+    ctx.arc(c, c, s * 0.5, 0, Math.PI * 2);
+    ctx.fill();
+  } else {
+    // glow : dégradé radial blanc -> transparent
+    const g = ctx.createRadialGradient(c, c, 0, c, c, c);
+    g.addColorStop(0, 'rgba(255,255,255,0.9)');
+    g.addColorStop(0.45, 'rgba(255,255,255,0.25)');
+    g.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, s, s);
+  }
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  _texCache[kind] = tex;
+  return tex;
+}
+function spriteFrom(map, scale, opacity) {
+  const sprite = new THREE.Sprite(
+    new THREE.SpriteMaterial({ map, transparent: true, opacity, depthTest: false, depthWrite: false })
+  );
+  sprite.scale.setScalar(scale);
+  return sprite;
+}
+
 // "Hub" 3D : affiche un Gaussian Splat des locaux comme un objet au centre,
 // qu'on peut orbiter, avec des points cliquables (bureaux) qui déclenchent
 // un callback (onHotspot). Le splat est chargé dans NOTRE scène Three.js via
@@ -103,21 +145,26 @@ export class Hub {
     }
   }
 
+  // Repère monochrome (style Prodigious) : halo doux + anneau fin + point plein,
+  // le tout en blanc, toujours face caméra (sprites), visible à travers le splat.
   _makeMarker() {
     const group = new THREE.Group();
-    const core = new THREE.Mesh(
-      new THREE.SphereGeometry(0.12, 24, 16),
-      new THREE.MeshBasicMaterial({ color: 0x5b8cff, depthTest: false, transparent: true })
-    );
-    core.renderOrder = 999;
-    const halo = new THREE.Sprite(
-      new THREE.SpriteMaterial({ color: 0x7c5bff, transparent: true, opacity: 0.35, depthTest: false })
-    );
-    halo.scale.setScalar(0.5);
-    halo.renderOrder = 998;
-    group.add(core, halo);
-    group.userData._core = core;
-    group.userData._halo = halo;
+
+    const glow = spriteFrom(markerTexture('glow'), 0.55, 0.28);
+    glow.renderOrder = 996;
+
+    const ring = spriteFrom(markerTexture('ring'), 0.34, 0.95);
+    ring.renderOrder = 998;
+
+    const dot = spriteFrom(markerTexture('disc'), 0.12, 1);
+    dot.renderOrder = 999;
+
+    // Zone de clic élargie (invisible mais toujours raycastable).
+    const hit = spriteFrom(markerTexture('disc'), 0.5, 0);
+
+    group.add(glow, ring, dot, hit);
+    group.userData._ring = ring;
+    group.userData._glow = glow;
     return group;
   }
 
@@ -193,10 +240,11 @@ export class Hub {
       if (!this._running) return;
       this._frame = requestAnimationFrame(loop);
       const t = this._clock.getElapsedTime();
-      // Pulsation des marqueurs.
+      // Pulsation douce de l'anneau + du halo.
       for (const m of this.hotspots.children) {
-        const s = 1 + Math.sin(t * 3) * 0.15;
-        m.userData._halo?.scale.setScalar(0.5 * s);
+        const p = 1 + Math.sin(t * 2.5) * 0.12;
+        m.userData._ring?.scale.setScalar(0.34 * p);
+        m.userData._glow?.scale.setScalar(0.55 * p);
       }
       this.controls.update();
       this.renderer.render(this.scene, this.camera);
