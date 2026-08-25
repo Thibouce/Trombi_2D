@@ -25,7 +25,11 @@ export const PANORAMAS = {
     // },
     { id: 'bureau-1', label: 'Felt', src: '/panoramas/style-1' },
     { id: 'bureau-2', label: 'Comic', src: '/panoramas/style-2' },
-    { id: 'bureau-3', label: 'Clay', src: '/panoramas/style-3' }
+    {
+      id: 'bureau-3', label: 'Clay', src: '/panoramas/style-clay',
+      styleRef: '/panoramas/ref-style-clay',
+      prompt: 'adapt the style of the face picture to the clay style image, integrate the close up face on a character in the image respecting the characters clay style, must respect clay eyes style. Use the image with dog as style reference, character must set at the place of one of the characters in the office. Keep structure of the image',
+    },
   ],
 
   // Zone "hall" : dépose tes panoramas du hall dans public/panoramas/
