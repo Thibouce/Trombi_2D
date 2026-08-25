@@ -77,7 +77,7 @@ export function createDemoPanorama(width = 4096, height = 2048) {
   ctx.textAlign = 'center';
   ctx.fillStyle = 'rgba(255,255,255,0.65)';
   ctx.font = `bold ${Math.round(height * 0.028)}px system-ui, sans-serif`;
-  ctx.fillText('PANORAMA DE DÉMO — remplace-moi par tes locaux 360°', 0, 0);
+  ctx.fillText('DEMO PANORAMA — replace me with your 360° premises', 0, 0);
   ctx.restore();
 
   return canvas;

@@ -1,33 +1,33 @@
 <!doctype html>
-<html lang="fr">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Trombi 2D — Expérience immersive 360°</title>
+    <title>Trombi 2D — Immersive 360° Experience</title>
     <link rel="stylesheet" href="/src/styles.css" />
   </head>
   <body data-stage="hub">
-    <!-- Étape 1 : hub 3D (Gaussian Splat des locaux) -->
+    <!-- Stage 1: 3D hub (Gaussian Splat of the premises) -->
     <canvas id="hub"></canvas>
-    <!-- Étape 2 : panorama 360 (une fois un style choisi) -->
+    <!-- Stage 2: 360 panorama (once a style is chosen) -->
     <canvas id="scene"></canvas>
 
-    <!-- Interface superposée -->
+    <!-- Overlaid interface -->
     <div id="ui">
       <header class="topbar">
         <h1>Trombi&nbsp;2D</h1>
-        <p class="subtitle" id="subtitle">Explore les locaux et clique sur ton bureau 🖱️</p>
+        <p class="subtitle" id="subtitle">Explore the premises and click on your desk 🖱️</p>
       </header>
 
-      <!-- Aide du hub (étape 1) -->
+      <!-- Hub help (stage 1) -->
       <section id="hub-ui" class="hub-ui">
-        <p class="hub-hint">Fais tourner les locaux et clique sur un point 🔵 pour choisir ton décor.</p>
-        <button id="enter-fallback" class="btn btn-ghost" title="Ouvrir le choix des styles sans passer par la 3D">Entrer sans la 3D →</button>
+        <p class="hub-hint">Rotate the premises and click a point 🔵 to choose your scene.</p>
+        <button id="enter-fallback" class="btn btn-ghost" title="Open the style picker without the 3D view">Enter without 3D →</button>
       </section>
 
-      <!-- Outil d'alignement du splat (visible avec ?debug) -->
+      <!-- Splat alignment tool (shown with ?debug) -->
       <section id="align-panel" class="align-panel hidden">
-        <strong>Aligner le splat</strong>
+        <strong>Align the splat</strong>
         <div class="align-grid">
           <span>X</span>
           <button class="btn btn-ghost" data-axis="x" data-deg="-90">−90</button>
@@ -47,19 +47,19 @@
         </div>
         <code id="align-readout">rotationEuler: [0, 0, 0]</code>
         <div class="align-actions">
-          <button id="align-copy" class="btn btn-primary">Copier</button>
+          <button id="align-copy" class="btn btn-primary">Copy</button>
           <button id="align-reset" class="btn btn-ghost">Reset</button>
         </div>
-        <span class="align-hint">Redresse (toit en haut, sol en bas), puis « Copier » → colle dans src/splat.js</span>
+        <span class="align-hint">Straighten it (roof up, floor down), then “Copy” → paste into src/splat.js</span>
 
         <hr class="align-sep" />
-        <strong>Placer un point (hotspot)</strong>
-        <code id="point-readout">clique gauche dans la scène…</code>
-        <button id="point-copy" class="btn btn-primary">Copier le point</button>
-        <span class="align-hint">Un repère 🟢 se pose au clic. Copie et ajoute-le à HOTSPOTS (src/splat.js).</span>
+        <strong>Place a point (hotspot)</strong>
+        <code id="point-readout">left-click in the scene…</code>
+        <button id="point-copy" class="btn btn-primary">Copy point</button>
+        <span class="align-hint">A 🟢 marker drops where you click. Copy it and add it to HOTSPOTS (src/splat.js).</span>
       </section>
 
-      <!-- Panneau de capture webcam (étape 2) -->
+      <!-- Webcam capture panel (stage 2) -->
       <section id="capture-panel" class="panel hidden">
         <div class="capture-stage">
           <video id="webcam" autoplay playsinline muted></video>
@@ -67,38 +67,38 @@
           <canvas id="capture-canvas" class="hidden"></canvas>
         </div>
         <div class="capture-actions">
-          <button id="shoot-btn" class="btn btn-primary">📸 Prendre la photo</button>
-          <button id="retake-btn" class="btn hidden">↺ Reprendre</button>
-          <button id="add-btn" class="btn btn-primary hidden">➕ Ajouter à la liste</button>
-          <button id="capture-cancel" class="btn btn-ghost">Fermer</button>
+          <button id="shoot-btn" class="btn btn-primary">📸 Take photo</button>
+          <button id="retake-btn" class="btn hidden">↺ Retake</button>
+          <button id="add-btn" class="btn btn-primary hidden">➕ Add to list</button>
+          <button id="capture-cancel" class="btn btn-ghost">Close</button>
         </div>
-        <p class="hint">Ajoute autant de visages que tu veux, puis « ✨ Intégrer » 🙂</p>
+        <p class="hint">Add as many faces as you like, then “✨ Integrate” 🙂</p>
       </section>
 
-      <!-- Choix des styles (modale, ouverte au clic sur un point) -->
+      <!-- Style picker (modal, opened when clicking a point) -->
       <section id="style-modal" class="panel style-modal hidden">
-        <h2 class="modal-title" id="style-modal-title">Choisis ton décor</h2>
+        <h2 class="modal-title" id="style-modal-title">Choose your scene</h2>
         <div id="style-picker" class="style-picker"></div>
-        <button id="style-cancel" class="btn btn-ghost">Annuler</button>
+        <button id="style-cancel" class="btn btn-ghost">Cancel</button>
       </section>
 
-      <!-- Barre d'actions (étape 2 : panorama) -->
+      <!-- Action bar (stage 2: panorama) -->
       <footer class="bottombar">
-        <!-- Liste des visages à intégrer (miniatures) -->
+        <!-- Faces to integrate (thumbnails) -->
         <div id="roster" class="roster hidden">
-          <span class="roster-label">Visages à intégrer</span>
+          <span class="roster-label">Faces to integrate</span>
           <div id="roster-list" class="roster-list"></div>
         </div>
-        <button id="back-hub" class="btn btn-ghost" title="Revenir aux locaux (3D)">← Locaux</button>
-        <button id="open-capture" class="btn btn-primary">🙂 Me prendre en photo</button>
-        <label class="btn btn-primary" title="Importer une image de visage (pratique pour tester)">
-          🖼️ Importer un visage
+        <button id="back-hub" class="btn btn-ghost" title="Back to the premises (3D)">← Premises</button>
+        <button id="open-capture" class="btn btn-primary">🙂 Take my photo</button>
+        <label class="btn btn-primary" title="Import a face image (handy for testing)">
+          🖼️ Import a face
           <input id="face-input" type="file" accept="image/*" hidden />
         </label>
-        <button id="integrate-btn" class="btn btn-primary" disabled>✨ Intégrer</button>
-        <button id="download-btn" class="btn btn-ghost" title="Télécharger le panorama résultat" disabled>⬇️ Télécharger</button>
-        <button id="autotour-btn" class="btn btn-ghost" aria-pressed="true">⏸ Tour auto</button>
-        <button id="reset-btn" class="btn btn-ghost" title="Revenir au décor d'origine">↺ Réinitialiser</button>
+        <button id="integrate-btn" class="btn btn-primary" disabled>✨ Integrate</button>
+        <button id="download-btn" class="btn btn-ghost" title="Download the resulting panorama" disabled>⬇️ Download</button>
+        <button id="autotour-btn" class="btn btn-ghost" aria-pressed="true">⏸ Auto-tour</button>
+        <button id="reset-btn" class="btn btn-ghost" title="Back to the original scene">↺ Reset</button>
       </footer>
     </div>
 

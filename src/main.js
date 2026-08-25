@@ -47,7 +47,7 @@ hub
   .catch((err) => {
     console.warn('[hub] splat non chargé :', err);
     $('hub-hint').textContent =
-      "Splat des locaux introuvable (public/splats/). Tu peux entrer sans la 3D ci-dessous.";
+      'Premises splat not found (public/splats/). You can enter without 3D below.';
   });
 
 // Outils de mise au point (mode ?debug) : aligner le splat + placer des points.
@@ -90,7 +90,7 @@ function setupAlignTool() {
   };
   $('point-copy').addEventListener('click', async () => {
     if (!lastPoint) return;
-    const line = `{ id: 'point', label: 'Nouveau point', position: [${lastPoint
+    const line = `{ id: 'point', label: 'New point', position: [${lastPoint
       .map((v) => v.toFixed(2))
       .join(', ')}] },`;
     try {
@@ -107,14 +107,14 @@ function setStage(stage) {
   if (stage === 'hub') {
     closeCapture();
     hub.start();
-    $('subtitle').textContent = 'Explore les locaux et clique sur ton bureau 🖱️';
+    $('subtitle').textContent = 'Explore the premises and click on your desk 🖱️';
   } else {
     hub.stop();
     if (!panoramaStarted) {
       panorama.start();
       panoramaStarted = true;
     }
-    $('subtitle').textContent = 'Prends-toi en photo, entre dans le décor 🙂';
+    $('subtitle').textContent = 'Take your photo and step into the scene 🙂';
   }
 }
 function goToPano() {
@@ -130,7 +130,7 @@ function openStyleModal(hotspot) {
   const zone = (hotspot && hotspot.zone) || zones[0];
   buildStylePicker(PANORAMAS[zone] || []);
   $('style-modal-title').textContent =
-    'Choisis ton décor' + (hotspot?.label ? ` — ${hotspot.label}` : '');
+    'Choose your scene' + (hotspot?.label ? ` — ${hotspot.label}` : '');
   $('style-modal').classList.remove('hidden');
 }
 function closeStyleModal() {
@@ -142,7 +142,7 @@ const webcam = new Webcam(video);
 
 // ---- Helpers UI -----------------------------------------------------------
 function showLoader(text) {
-  loader.querySelector('span').textContent = text || 'Traitement…';
+  loader.querySelector('span').textContent = text || 'Working…';
   loader.classList.remove('hidden');
 }
 function hideLoader() {
@@ -160,7 +160,7 @@ function setCaptureState(mode) {
 
   const retake = $('retake-btn');
   retake.classList.toggle('hidden', live);
-  retake.textContent = imported ? '🖼️ Autre image' : '↺ Reprendre';
+  retake.textContent = imported ? '🖼️ Another image' : '↺ Retake';
 }
 
 async function openCapture() {
@@ -170,7 +170,7 @@ async function openCapture() {
   try {
     await webcam.start();
   } catch (err) {
-    alert("Impossible d'accéder à la webcam : " + err.message);
+    alert('Cannot access the webcam: ' + err.message);
     closeCapture();
   }
 }
@@ -224,7 +224,7 @@ function addCurrentPerson() {
   const frame = captureCanvas._frame;
   if (!frame) return;
   if (state.people.length >= MAX_PEOPLE) {
-    alert(`Maximum ${MAX_PEOPLE} visages par intégration.`);
+    alert(`Maximum ${MAX_PEOPLE} faces per integration.`);
     return;
   }
   state.people.push(toScaledDataURL(frame, 1536, 0.92));
@@ -247,10 +247,10 @@ function renderRoster() {
     item.className = 'roster-item';
     const img = document.createElement('img');
     img.src = dataUrl;
-    img.alt = `Visage ${i + 1}`;
+    img.alt = `Face ${i + 1}`;
     const del = document.createElement('button');
     del.className = 'roster-del';
-    del.title = 'Retirer';
+    del.title = 'Remove';
     del.textContent = '×';
     del.addEventListener('click', () => {
       state.people.splice(i, 1);
@@ -264,13 +264,13 @@ function renderRoster() {
   roster.classList.toggle('hidden', count === 0);
   const btn = $('integrate-btn');
   btn.disabled = count === 0;
-  btn.textContent = count === 0 ? '✨ Intégrer' : `✨ Intégrer (${count})`;
+  btn.textContent = count === 0 ? '✨ Integrate' : `✨ Integrate (${count})`;
 }
 
 // Envoie la scène + tous les visages de la liste à GPT Image 2, en un appel.
 async function integrateAll() {
   if (state.people.length === 0) return;
-  showLoader(`Intégration de ${state.people.length} visage(s)… (GPT Image 2)`);
+  showLoader(`Integrating ${state.people.length} face(s)… (GPT Image 2)`);
   try {
     const editedDataUrl = await integrateIntoScene({
       personDataUrls: state.people,
@@ -285,7 +285,7 @@ async function integrateAll() {
     setDownloadEnabled(true);
   } catch (err) {
     console.error(err);
-    alert("L'intégration a échoué : " + err.message);
+    alert('Integration failed: ' + err.message);
   } finally {
     hideLoader();
   }
@@ -299,7 +299,7 @@ function applySceneImage(url) {
       panorama.setPanoramaTexture(img);
       resolve();
     };
-    img.onerror = () => reject(new Error('Image de scène invalide.'));
+    img.onerror = () => reject(new Error('Invalid scene image.'));
     img.src = url;
   });
 }
@@ -340,7 +340,7 @@ function buildStylePicker(styles) {
     const btn = document.createElement('button');
     btn.className = 'style-thumb';
     btn.dataset.id = style.id;
-    btn.title = `Se projeter — ${style.label}`;
+    btn.title = `Enter — ${style.label}`;
 
     const img = document.createElement('img');
     img.alt = style.label;
@@ -370,7 +370,7 @@ function setActiveStyle(id) {
 
 // Projette la scène dans le décor du style choisi, puis passe au panorama.
 async function selectStyle(style) {
-  showLoader('Chargement du décor…');
+  showLoader('Loading scene…');
   try {
     const { img } = await resolveImage(style.src);
     panorama.setPanoramaTexture(img);
@@ -395,8 +395,8 @@ async function selectStyle(style) {
     goToPano();
   } catch (err) {
     alert(
-      `Décor introuvable (${style.src}.*).\n` +
-        "Dépose l'image équirectangulaire dans public/panoramas/ (png, jpg, webp…)."
+      `Scene not found (${style.src}.*).\n` +
+        'Drop the equirectangular image into public/panoramas/ (png, jpg, webp…).'
     );
   } finally {
     hideLoader();
@@ -458,9 +458,9 @@ const autotourBtn = $('autotour-btn');
 autotourBtn.addEventListener('click', () => {
   const on = panorama.toggleAutoTour();
   autotourBtn.setAttribute('aria-pressed', String(on));
-  autotourBtn.textContent = on ? '⏸ Tour auto' : '▶ Tour auto';
+  autotourBtn.textContent = on ? '⏸ Auto-tour' : '▶ Auto-tour';
 });
 panorama.onUserInteract = () => {
   autotourBtn.setAttribute('aria-pressed', 'false');
-  autotourBtn.textContent = '▶ Tour auto';
+  autotourBtn.textContent = '▶ Auto-tour';
 };
