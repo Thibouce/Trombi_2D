@@ -2,6 +2,7 @@
 // POST /api/integrate. Lance-le après `npm run build` avec :
 //   node --env-file=.env server.js
 import http from 'node:http';
+import { exec } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import { extname, join, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -62,6 +63,18 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`Trombi 2D sur http://localhost:${PORT}`);
+  const url = `http://localhost:${PORT}`;
+  console.log(`Trombi 2D sur ${url}`);
   if (!apiKey) console.warn('⚠️  FAL_KEY non défini : /api/integrate renverra une erreur.');
+
+  // Ouverture automatique du navigateur (activée par le lanceur Demarrer.bat).
+  if (process.env.OPEN_BROWSER) {
+    const cmd =
+      process.platform === 'win32'
+        ? `start "" "${url}"`
+        : process.platform === 'darwin'
+          ? `open "${url}"`
+          : `xdg-open "${url}"`;
+    exec(cmd, () => {});
+  }
 });

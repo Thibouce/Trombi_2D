@@ -25,7 +25,22 @@ borne d'accueil, un salon ou un mur d'écran.
 > 🔒 La **clé API reste côté serveur** : le navigateur appelle `/api/integrate`,
 > jamais l'API fal.ai directement.
 
-## 🚀 Démarrer
+## 🖱️ Installation facile (Windows, sans ligne de commande)
+
+Pour un poste Windows, deux fichiers à **double‑cliquer** :
+
+1. **`Installer.bat`** — vérifie Node.js (propose le téléchargement s'il manque),
+   installe les dépendances, construit l'app et demande la **clé API fal.ai**
+   (écrite dans `.env`).
+2. **`Demarrer.bat`** — lance le programme et **ouvre le navigateur** tout seul
+   sur `http://localhost:5173`. Laisse la fenêtre ouverte pendant l'utilisation ;
+   ferme‑la pour arrêter.
+
+> Prérequis unique : **Node.js** (LTS) installé une fois via son propre
+> installateur (`Installer.bat` ouvre la page si besoin). La webcam fonctionne
+> sur `localhost` sans configuration.
+
+## 🚀 Démarrer (ligne de commande)
 
 ```bash
 npm install
