@@ -25,9 +25,24 @@ borne d'accueil, un salon ou un mur d'écran.
 > 🔒 La **clé API reste côté serveur** : le navigateur appelle `/api/integrate`,
 > jamais l'API fal.ai directement.
 
+## ⬇️ Téléchargeur tout‑en‑un (Windows)
+
+`Telecharger.bat` est un **bootstrap** à mettre dans un dossier vide et à
+**double‑cliquer**. Il télécharge le **code** (dépôt public), le **splat 3D**
+(≈ 1 Go, depuis la *release* GitHub `v1`) puis enchaîne l'installation.
+
+C'est le seul fichier à envoyer à quelqu'un : tout le reste est récupéré
+automatiquement. À la fin, un dossier `Trombi_2D/` est prêt — on lance ensuite
+avec `Demarrer.bat`.
+
+> Le **splat** (`locaux.ply`) est trop volumineux pour Git : il est hébergé en
+> *release* et récupéré par le téléchargeur. Pour publier une nouvelle version du
+> splat, remplace l'asset de la release (tag `v1`) ou change `TAG` dans le script.
+
 ## 🖱️ Installation facile (Windows, sans ligne de commande)
 
-Pour un poste Windows, deux fichiers à **double‑cliquer** :
+Si tu as déjà le dossier du projet (via le téléchargeur, un zip ou `git`), deux
+fichiers à **double‑cliquer** :
 
 1. **`Installer.bat`** — vérifie Node.js (propose le téléchargement s'il manque),
    installe les dépendances, construit l'app et demande la **clé API fal.ai**
