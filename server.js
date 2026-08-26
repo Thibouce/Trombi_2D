@@ -44,15 +44,17 @@ const server = http.createServer(async (req, res) => {
 
   // Fichiers statiques (avec repli SPA vers index.html).
   try {
-    const urlPath = decodeURIComponent((req.url || '/').split('?')[0]);
+    let urlPath = decodeURIComponent((req.url || '/').split('?')[0]);
+    // Un dossier (ou "/") -> on sert son index.html.
+    if (urlPath.endsWith('/')) urlPath += 'index.html';
     let filePath = normalize(join(DIST, urlPath));
     if (!filePath.startsWith(DIST)) filePath = join(DIST, 'index.html');
     let data;
     try {
-      data = await readFile(urlPath === '/' ? join(DIST, 'index.html') : filePath);
+      data = await readFile(filePath);
     } catch {
-      data = await readFile(join(DIST, 'index.html'));
-      filePath = 'index.html';
+      filePath = join(DIST, 'index.html'); // repli SPA
+      data = await readFile(filePath);
     }
     res.setHeader('Content-Type', MIME[extname(filePath)] || 'application/octet-stream');
     res.end(data);
