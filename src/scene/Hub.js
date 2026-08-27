@@ -88,6 +88,25 @@ export class Hub {
     this.controls.update();
   }
 
+  // Recentre l'orbite sur une position [x,y,z] (transition douce). On déplace la
+  // cible ET la caméra du même vecteur : l'angle/la distance d'orbite sont
+  // conservés, la caméra "glisse" pour tourner autour du nouveau point.
+  focusHotspot(positionArray) {
+    if (!positionArray) return;
+    const goal = new THREE.Vector3().fromArray(positionArray);
+    const delta = goal.clone().sub(this.controls.target);
+    this._targetGoal = goal;
+    this._camGoal = this.camera.position.clone().add(delta);
+    this._focusing = true;
+  }
+
+  // Marque un point comme sélectionné (mise en avant visuelle).
+  selectHotspot(id) {
+    for (const m of this.hotspots.children) {
+      m.userData.selected = m.userData.id === id;
+    }
+  }
+
   // Charge le splat. Renvoie une promesse résolue quand il est prêt.
   async loadSplat(cfg) {
     this._cfg = cfg;
@@ -239,13 +258,31 @@ export class Hub {
     const loop = () => {
       if (!this._running) return;
       this._frame = requestAnimationFrame(loop);
-      const t = this._clock.getElapsedTime();
-      // Pulsation douce de l'anneau + du halo.
-      for (const m of this.hotspots.children) {
-        const p = 1 + Math.sin(t * 2.5) * 0.12;
-        m.userData._ring?.scale.setScalar(0.34 * p);
-        m.userData._glow?.scale.setScalar(0.55 * p);
+      const dt = this._clock.getDelta();
+      const t = this._clock.elapsedTime;
+
+      // Recentrage progressif de l'orbite sur le point sélectionné.
+      if (this._focusing) {
+        const k = 1 - Math.pow(0.0015, dt);
+        this.controls.target.lerp(this._targetGoal, k);
+        this.camera.position.lerp(this._camGoal, k);
+        if (this.controls.target.distanceTo(this._targetGoal) < 0.01) {
+          this.controls.target.copy(this._targetGoal);
+          this.camera.position.copy(this._camGoal);
+          this._focusing = false;
+        }
       }
+
+      // Pulsation ; le point sélectionné est plus grand / plus lumineux.
+      for (const m of this.hotspots.children) {
+        const sel = m.userData.selected;
+        const p = 1 + Math.sin(t * 2.5) * (sel ? 0.18 : 0.1);
+        m.userData._ring?.scale.setScalar((sel ? 0.42 : 0.3) * p);
+        m.userData._glow?.scale.setScalar((sel ? 0.7 : 0.5) * p);
+        if (m.userData._ring) m.userData._ring.material.opacity = sel ? 1 : 0.55;
+        if (m.userData._glow) m.userData._glow.material.opacity = sel ? 0.35 : 0.18;
+      }
+
       this.controls.update();
       this.renderer.render(this.scene, this.camera);
     };

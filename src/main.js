@@ -38,7 +38,23 @@ const debug = location.search.includes('debug');
 const hub = new Hub($('hub'), { debug });
 hub.setCamera(SPLAT.camera);
 hub.addHotspots(HOTSPOTS);
-hub.onHotspot = (data) => openStyleModal(data);
+
+// Point actuellement focalisé (orbite centrée dessus). Par défaut : le premier.
+let selectedHotspotId = HOTSPOTS[0]?.id || null;
+if (selectedHotspotId) hub.selectHotspot(selectedHotspotId);
+
+// 1er clic sur un point -> recentre l'orbite dessus ; 2e clic (déjà focalisé)
+// -> ouvre le choix du décor.
+hub.onHotspot = (data) => {
+  if (data.id === selectedHotspotId) {
+    openStyleModal(data);
+  } else {
+    selectedHotspotId = data.id;
+    hub.focusHotspot(data.position);
+    hub.selectHotspot(data.id);
+    $('hub-hint').textContent = `${data.label} — click the point again to choose your scene.`;
+  }
+};
 hub.start();
 let refreshAlignReadout = () => {};
 hub
