@@ -27,7 +27,10 @@ export const PANORAMAS = {
       styleRef: '/panoramas/ref-style-felt' ,
       prompt : 'adapt the style of the face picture to the Felt style image, integrate the close up face on a character in the image respecting the characters Felt style, must respect Felt eyes style. Use the Felt image as style reference, character must set at the place of one of the characters in the office. Keep structure of the image' ,
     },
-    { id: 'bureau-2', label: 'Comic', src: '/panoramas/style-2' },
+    { id: 'bureau-2', label: 'Cartoon', src: '/panoramas/style-cartoon' ,
+      styleRef: '/panoramas/ref-style-cartoon' ,
+      prompt : 'adapt the style of the face picture to the animation cartoon style image, integrate the close up face on a character in the image respecting the characters cartoon style, must respect animation faces style. Use the animation cartoon image as style reference, character must set at the place of one of the characters in the office. Keep structure of the image' ,
+    },
     {
       id: 'bureau-3', label: 'Clay', src: '/panoramas/style-clay',
       styleRef: '/panoramas/ref-style-clay',
