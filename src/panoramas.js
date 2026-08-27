@@ -24,7 +24,7 @@ export const PANORAMAS = {
     //   prompt: 'The first image is the scene, the second is the style reference. Replace the face of a character with each provided face, matching the style reference.',
     // },
     { id: 'bureau-1', label: 'Felt', src: '/panoramas/style-felt' ,
-      styleRef: '/panoramas/ref-style_felt' ,
+      styleRef: '/panoramas/ref-style-felt' ,
       prompt : 'adapt the style of the face picture to the Felt style image, integrate the close up face on a character in the image respecting the characters Felt style, must respect Felt eyes style. Use the Felt image as style reference, character must set at the place of one of the characters in the office. Keep structure of the image' ,
     },
     { id: 'bureau-2', label: 'Comic', src: '/panoramas/style-2' },
