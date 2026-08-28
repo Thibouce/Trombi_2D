@@ -25,6 +25,12 @@ borne d'accueil, un salon ou un mur d'écran.
 > 🔒 La **clé API reste côté serveur** : le navigateur appelle `/api/integrate`,
 > jamais l'API fal.ai directement.
 
+## 📖 Reprise du projet (sans coder)
+
+Pour ajouter des styles, placer des points ou modifier les prompts **sans
+compétence technique**, voir **[`GUIDE.md`](GUIDE.md)**. Après toute modification
+de config, double‑clique **`Reconstruire.bat`** puis **`Demarrer.bat`**.
+
 ## ⬇️ Téléchargeur tout‑en‑un (Windows)
 
 `Telecharger.bat` est un **bootstrap** à mettre dans un dossier vide et à
